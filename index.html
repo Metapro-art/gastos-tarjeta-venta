@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Control de Gastos · Tarjeta de Crédito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- Firebase (auth + base de datos) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --ink:        #0c0d10;
+    --ink-2:      #121419;
+    --surface:    #16181f;
+    --surface-2:  #1c1f28;
+    --line:       #282c38;
+    --line-soft:  #20232c;
+    --text:       #ece8df;
+    --text-dim:   #9aa0ad;
+    --text-faint: #646b78;
+    --gold:       #e0b357;
+    --gold-soft:  #c9a04a;
+    --emerald:    #5fc59b;
+    --rose:       #e0796a;
+    --shadow:     0 24px 60px -20px rgba(0,0,0,.7);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{ height:100%; }
+
+  body{
+    font-family:'Hanken Grotesk', sans-serif;
+    color:var(--text);
+    color-scheme:dark;
+    background:
+      radial-gradient(1100px 600px at 78% -8%, rgba(224,179,87,.10), transparent 60%),
+      radial-gradient(900px 500px at -8% 12%, rgba(95,197,155,.07), transparent 55%),
+      var(--ink);
+    background-attachment:fixed;
+    min-height:100%;
+    padding:clamp(20px, 4vw, 56px);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+
+  .wrap{ max-width:1120px; margin:0 auto; }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; flex-wrap:wrap; align-items:flex-end;
+    justify-content:space-between; gap:24px;
+    margin-bottom:32px;
+  }
+  .brand .eyebrow{
+    font-size:12px; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--gold); font-weight:600; margin-bottom:10px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(30px, 5vw, 50px);
+    line-height:1.02;
+    letter-spacing:-.01em;
+  }
+  h1 em{ font-style:italic; color:var(--gold); }
+  .subtitle{ color:var(--text-dim); margin-top:8px; font-size:15px; max-width:42ch; }
+
+  /* ---------- TRM badge ---------- */
+  .trm-card{
+    background:linear-gradient(160deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 22px;
+    min-width:240px;
+    box-shadow:var(--shadow);
+  }
+  .trm-card .label{
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:600; display:flex; align-items:center; gap:8px;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--text-faint); }
+  .dot.live{ background:var(--emerald); box-shadow:0 0 0 0 rgba(95,197,155,.5); animation:pulse 2s infinite; }
+  .dot.err{ background:var(--rose); }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(95,197,155,.45);} 70%{box-shadow:0 0 0 7px rgba(95,197,155,0);} 100%{box-shadow:0 0 0 0 rgba(95,197,155,0);} }
+  .trm-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size:27px; font-weight:600; color:var(--gold);
+    margin-top:8px; display:flex; align-items:baseline; gap:6px;
+  }
+  .trm-value .cur{ font-size:13px; color:var(--text-dim); }
+  .trm-meta{ font-size:12px; color:var(--text-faint); margin-top:4px; display:flex; gap:10px; align-items:center; }
+  .trm-meta button{
+    background:none; border:none; color:var(--gold-soft); cursor:pointer;
+    font-size:12px; font-weight:600; text-decoration:underline; padding:0;
+    font-family:inherit;
+  }
+  .trm-meta button:hover{ color:var(--gold); }
+
+  /* ---------- Stat cards ---------- */
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+    gap:16px; margin-bottom:28px;
+  }
+  .stat{
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:16px; padding:20px 22px; position:relative; overflow:hidden;
+  }
+  .stat::before{
+    content:""; position:absolute; inset:0 auto 0 0; width:3px;
+    background:var(--gold); opacity:.55;
+  }
+  .stat.alt::before{ background:var(--emerald); }
+  .stat.warn::before{ background:var(--rose); }
+  .stat .k{ font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--text-faint); font-weight:600; }
+  .stat .v{ font-family:'JetBrains Mono', monospace; font-size:26px; font-weight:600; margin-top:10px; letter-spacing:-.01em; }
+  .stat .v.cop{ color:var(--text); }
+  .stat .v.usd{ color:var(--gold); }
+  .stat .v.green{ color:var(--emerald); }
+  .stat .v.red{ color:var(--rose); }
+  .stat .sub{ font-size:12px; color:var(--text-faint); margin-top:6px; }
+
+  /* ---------- Form ---------- */
+  .panel{
+    background:linear-gradient(180deg, var(--surface), var(--ink-2));
+    border:1px solid var(--line);
+    border-radius:20px; padding:24px; margin-bottom:28px;
+    box-shadow:var(--shadow);
+  }
+  .panel h2{
+    font-family:'Fraunces', serif; font-weight:500; font-size:20px;
+    margin-bottom:18px; display:flex; align-items:center; gap:10px;
+  }
+  .panel h2 span{ color:var(--gold); font-size:14px; }
+  .form-grid{
+    display:grid; gap:14px;
+    grid-template-columns: 1fr 1fr 1fr 0.8fr 1.1fr auto;
+    align-items:end;
+  }
+  .form-grid .field.wide{ grid-column:1 / -1; }
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field .hint-eq{ font-size:11px; color:var(--text-faint); height:0; }
+  .rate-line{
+    margin-top:14px; font-size:13px; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace;
+    display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  }
+  .rate-line b{ color:var(--gold); font-weight:600; }
+  .rate-line .tag{
+    background:rgba(224,179,87,.12); color:var(--gold);
+    border:1px solid rgba(224,179,87,.28); border-radius:999px;
+    padding:2px 9px; font-size:11px; font-weight:600;
+  }
+  .sub-rate{ font-size:11px; color:var(--text-faint); margin-top:2px; }
+  .trm-eff{ font-size:12px; color:var(--emerald); margin-top:5px; font-family:'JetBrains Mono', monospace; }
+  .field label{ font-size:12px; letter-spacing:.06em; color:var(--text-dim); font-weight:600; }
+  .field input{
+    background:var(--ink); border:1px solid var(--line);
+    border-radius:11px; padding:13px 14px; color:var(--text);
+    font-family:'Hanken Grotesk', sans-serif; font-size:15px; width:100%;
+    transition:border-color .18s, box-shadow .18s;
+  }
+  .field input.num{ font-family:'JetBrains Mono', monospace; }
+  .field input::placeholder{ color:var(--text-faint); }
+  .field input:focus{
+    outline:none; border-color:var(--gold-soft);
+    box-shadow:0 0 0 3px rgba(224,179,87,.14);
+  }
+  .btn-add{
+    background:linear-gradient(180deg, var(--gold), var(--gold-soft));
+    color:#1a1404; border:none; border-radius:11px;
+    padding:13px 26px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:15px; font-weight:700; cursor:pointer; height:48px;
+    letter-spacing:.01em; transition:transform .12s, filter .18s; white-space:nowrap;
+  }
+  .btn-add:hover{ filter:brightness(1.07); transform:translateY(-1px); }
+  .btn-add:active{ transform:translateY(0); }
+
+  /* ---------- Table ---------- */
+  .table-card{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:20px; overflow:hidden; box-shadow:var(--shadow);
+  }
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; min-width:760px; }
+  thead th{
+    text-align:left; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:700; padding:16px 18px;
+    background:var(--ink-2); border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  th.r, td.r{ text-align:right; }
+  th.c, td.c{ text-align:center; }
+  tbody td{
+    padding:15px 18px; border-bottom:1px solid var(--line-soft);
+    font-size:14.5px; vertical-align:middle;
+  }
+  tbody tr{ transition:background .15s; }
+  tbody tr:hover{ background:var(--surface-2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .desc{ font-weight:500; }
+  .date{ font-size:12px; color:var(--text-faint); margin-top:2px; }
+  .mono{ font-family:'JetBrains Mono', monospace; font-weight:500; }
+  .usd{ color:var(--gold); }
+  .cop{ color:var(--text); }
+  .trm-cell{ color:var(--text-dim); font-size:13px; }
+  .cuota-pill{
+    display:inline-block; background:rgba(95,197,155,.12); color:var(--emerald);
+    border:1px solid rgba(95,197,155,.28); border-radius:999px;
+    padding:3px 11px; font-size:13px; font-weight:600; font-family:'JetBrains Mono',monospace;
+  }
+  .cuota-val{ font-size:12px; color:var(--text-faint); margin-top:3px; font-family:'JetBrains Mono',monospace; }
+  .del{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:15px;
+    transition:all .16s; line-height:1;
+  }
+  .del:hover{ border-color:var(--rose); color:var(--rose); background:rgba(224,121,106,.08); }
+  .edit{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:14px;
+    transition:all .16s; line-height:1;
+  }
+  .edit:hover{ border-color:var(--gold-soft); color:var(--gold); background:rgba(224,179,87,.08); }
+  .row-actions{ display:flex; gap:6px; justify-content:center; }
+  .edit-banner{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:rgba(224,179,87,.10); border:1px solid rgba(224,179,87,.30);
+    color:var(--gold); border-radius:12px; padding:11px 16px; margin-bottom:18px;
+    font-size:14px; font-weight:600;
+  }
+  .edit-banner button{
+    background:none; border:1px solid var(--gold-soft); color:var(--gold);
+    border-radius:8px; padding:5px 14px; cursor:pointer; font-family:inherit;
+    font-size:13px; font-weight:600; transition:all .16s;
+  }
+  .edit-banner button:hover{ background:rgba(224,179,87,.18); }
+
+  tfoot td{
+    padding:18px; background:var(--ink-2); border-top:2px solid var(--line);
+    font-weight:600;
+  }
+  tfoot .tlabel{ font-family:'Fraunces',serif; font-size:16px; letter-spacing:.01em; }
+  tfoot .mono{ font-size:16px; }
+  tfoot .usd{ color:var(--gold); }
+  tfoot .cop{ color:var(--emerald); }
+
+  /* ---------- Empty ---------- */
+  .empty{ text-align:center; padding:60px 20px; color:var(--text-faint); }
+  .empty .big{ font-family:'Fraunces',serif; font-size:22px; color:var(--text-dim); margin-bottom:8px; }
+
+  /* ---------- Login gate ---------- */
+  .gate{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(1100px 600px at 78% -8%, rgba(224,179,87,.12), transparent 60%),
+      radial-gradient(900px 500px at -8% 12%, rgba(95,197,155,.08), transparent 55%),
+      var(--ink);
+  }
+  .gate-card{
+    background:linear-gradient(180deg, var(--surface), var(--ink-2));
+    border:1px solid var(--line); border-radius:22px;
+    padding:clamp(28px,5vw,44px); max-width:440px; width:100%;
+    box-shadow:var(--shadow); text-align:center;
+  }
+  .gate-card .eyebrow{
+    font-size:12px; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--gold); font-weight:600; margin-bottom:14px;
+  }
+  .gate-card h1{ font-family:'Fraunces',serif; font-weight:500; font-size:clamp(26px,6vw,38px); line-height:1.05; margin-bottom:14px; }
+  .gate-card h1 em{ font-style:italic; color:var(--gold); }
+  .gate-card p{ color:var(--text-dim); font-size:15px; line-height:1.55; margin-bottom:26px; }
+  .btn-google{
+    display:inline-flex; align-items:center; gap:12px; justify-content:center;
+    background:#fff; color:#1f1f1f; border:none; border-radius:12px;
+    padding:14px 24px; font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600;
+    cursor:pointer; transition:transform .12s, filter .18s; width:100%;
+  }
+  .btn-google:hover{ filter:brightness(.97); transform:translateY(-1px); }
+  .btn-google svg{ width:20px; height:20px; }
+  .gate-foot{ margin-top:22px; font-size:12.5px; color:var(--text-faint); line-height:1.6; }
+  .gate-status{ margin-top:16px; font-size:13px; color:var(--text-dim); min-height:18px; }
+
+  .denied .ico{ font-size:42px; margin-bottom:8px; }
+  .pay-box{
+    background:var(--ink); border:1px solid var(--line); border-radius:14px;
+    padding:18px; margin:22px 0 6px; text-align:left;
+  }
+  .pay-box .row{ display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:14px; }
+  .pay-box .row .lbl{ color:var(--text-faint); }
+  .pay-box .row .val{ color:var(--text); font-weight:600; font-family:'JetBrains Mono',monospace; word-break:break-all; }
+  .pay-box .email-mine{ color:var(--gold); }
+
+  /* ---------- User bar ---------- */
+  .userbar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:14px; padding:12px 16px; margin-bottom:24px;
+  }
+  .userbar img{ width:34px; height:34px; border-radius:50%; }
+  .userbar .uinfo{ flex:1; min-width:0; }
+  .userbar .uname{ font-weight:600; font-size:14px; }
+  .userbar .umail{ font-size:12px; color:var(--text-faint); word-break:break-all; }
+  .userbar .badge-admin{
+    background:rgba(224,179,87,.14); color:var(--gold); border:1px solid rgba(224,179,87,.3);
+    border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700; letter-spacing:.04em;
+  }
+  .btn-logout{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    border-radius:10px; padding:9px 16px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer; transition:all .16s;
+  }
+  .btn-logout:hover{ border-color:var(--rose); color:var(--rose); }
+
+  /* ---------- Admin panel ---------- */
+  .admin{
+    background:linear-gradient(160deg, rgba(224,179,87,.06), var(--surface));
+    border:1px solid rgba(224,179,87,.25); border-radius:18px;
+    padding:22px; margin-bottom:28px;
+  }
+  .admin h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin-bottom:6px; color:var(--gold); }
+  .admin .desc{ font-size:13px; color:var(--text-dim); margin-bottom:16px; }
+  .admin-add{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .admin-add input{
+    flex:1 1 240px; min-width:0; background:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:11px 13px; color:var(--text);
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px;
+  }
+  .admin-add input:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
+  .admin-add button{
+    background:linear-gradient(180deg,var(--gold),var(--gold-soft)); color:#1a1404;
+    border:none; border-radius:10px; padding:11px 22px; font-weight:700; cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; white-space:nowrap;
+  }
+  .admin-add button:hover{ filter:brightness(1.07); }
+  .auth-list{ display:flex; flex-direction:column; gap:8px; }
+  .auth-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--ink); border:1px solid var(--line-soft); border-radius:10px;
+    padding:10px 14px; font-size:14px;
+  }
+  .auth-item .em{ word-break:break-all; }
+  .auth-item button{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    border-radius:8px; padding:5px 12px; cursor:pointer; font-size:12px; font-weight:600;
+    transition:all .16s; white-space:nowrap;
+  }
+  .auth-item button:hover{ border-color:var(--rose); color:var(--rose); }
+  .auth-empty{ font-size:13px; color:var(--text-faint); padding:8px 2px; }
+
+  .app-hidden{ display:none !important; }
+
+  /* ---------- Sync ---------- */
+  .sync-card{
+    background:linear-gradient(160deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line); border-radius:16px;
+    padding:18px 22px; margin-bottom:28px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px 16px;
+  }
+  .sync-card .s-label{
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:600; display:flex; align-items:center; gap:8px;
+    width:100%;
+  }
+  .sync-card .s-status{
+    font-size:13px; color:var(--text-dim);
+    line-height:1.5; word-break:break-word; overflow-wrap:anywhere;
+  }
+  .sync-card .s-status b{ word-break:break-all; }
+  .sync-card input{
+    background:var(--ink); border:1px solid var(--line); border-radius:10px;
+    padding:11px 13px; color:var(--text); font-family:'JetBrains Mono', monospace;
+    font-size:14px; flex:1 1 200px; min-width:0; max-width:340px;
+    transition:border-color .18s, box-shadow .18s;
+  }
+  .sync-card input:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
+  .sync-card button{
+    border-radius:10px; padding:11px 18px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:14px; font-weight:600; cursor:pointer; transition:all .16s; border:1px solid var(--line);
+    background:transparent; color:var(--text-dim); white-space:nowrap; flex:0 0 auto;
+  }
+  .sync-card button.primary{
+    background:linear-gradient(180deg, var(--gold), var(--gold-soft));
+    color:#1a1404; border:none; font-weight:700;
+  }
+  .sync-card button.primary:hover{ filter:brightness(1.07); }
+  .sync-card button:hover{ border-color:var(--gold-soft); color:var(--gold); }
+  .sync-card .grow{ flex:1 1 100%; }
+  .sync-hint{ font-size:12px; color:var(--text-faint); width:100%; margin-top:2px; line-height:1.5; }
+
+  @media (max-width:620px){
+    .sync-card{ padding:16px; }
+    .sync-card input{ flex:1 1 100%; max-width:none; }
+    .sync-card button{ flex:1 1 100%; }
+  }
+
+  /* ---------- Footer actions ---------- */
+  .actions{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:22px; flex-wrap:wrap; gap:14px;
+  }
+  .hint{ font-size:13px; color:var(--text-faint); max-width:55ch; }
+  .btn-reset{
+    background:transparent; border:1px solid var(--line);
+    color:var(--text-dim); border-radius:11px; padding:11px 20px;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; transition:all .16s;
+  }
+  .btn-reset:hover{ border-color:var(--rose); color:var(--rose); background:rgba(224,121,106,.06); }
+  .action-btns{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn-ghost{
+    background:transparent; border:1px solid var(--line);
+    color:var(--text-dim); border-radius:11px; padding:11px 18px;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; transition:all .16s;
+  }
+  .btn-ghost:hover{ border-color:var(--gold-soft); color:var(--gold); background:rgba(224,179,87,.06); }
+
+  .cupo-mini{
+    display:flex; align-items:center; gap:10px; margin-top:14px;
+    font-size:13px; color:var(--text-dim);
+  }
+  .cupo-mini label{ font-weight:600; }
+  .cupo-mini input{
+    background:var(--ink); border:1px solid var(--line); border-radius:9px;
+    padding:8px 11px; color:var(--text); font-family:'JetBrains Mono',monospace;
+    font-size:13px; width:170px;
+  }
+  .cupo-mini input:focus{ outline:none; border-color:var(--gold-soft); }
+
+  @media (max-width:760px){
+    .form-grid{ grid-template-columns:1fr 1fr; }
+    .form-grid .field.wide{ grid-column:1 / -1; }
+    .btn-add{ grid-column:1 / -1; width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Pantalla de carga inicial ===== -->
+<div class="gate" id="gateLoading">
+  <div class="gate-card">
+    <div class="eyebrow">Cargando</div>
+    <p style="margin:0">Un momento…</p>
+  </div>
+</div>
+
+<!-- ===== Pantalla de login ===== -->
+<div class="gate app-hidden" id="gateLogin">
+  <div class="gate-card">
+    <div class="eyebrow">Tarjeta de Crédito</div>
+    <h1>Control de <em>Gastos</em></h1>
+    <p>Lleva el control de tus compras en dólares y pesos, con la TRM del día. Inicia sesión para acceder a tu cuenta.</p>
+    <button class="btn-google" id="btnGoogle">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.3 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3-.8-4.4s.3-3 .8-4.4l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.6 10.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.4 2.1-6.3 0-11.7-4.2-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
+      Iniciar sesión con Google
+    </button>
+    <div class="gate-status" id="loginStatus"></div>
+    <div class="gate-foot">Tus datos quedan asociados a tu cuenta y solo tú los ves.</div>
+  </div>
+</div>
+
+<!-- ===== Pantalla de acceso no autorizado ===== -->
+<div class="gate app-hidden" id="gateDenied">
+  <div class="gate-card denied">
+    <div class="ico">🔒</div>
+    <div class="eyebrow">Acceso pendiente</div>
+    <h1>Activa tu <em>acceso</em></h1>
+    <p>Tu cuenta aún no está habilitada. Para activarla, realiza el pago y envía tu correo al vendedor; en minutos quedarás habilitado.</p>
+    <div class="pay-box">
+      <div class="row"><span class="lbl">Pago Nequi</span><span class="val" id="payNequi">PON_AQUI_TU_NEQUI</span></div>
+      <div class="row"><span class="lbl">Tu correo</span><span class="val email-mine" id="myEmail">—</span></div>
+      <div class="row"><span class="lbl">Escríbeme</span><span class="val" id="payContact">PON_AQUI_TU_CONTACTO</span></div>
+    </div>
+    <div class="gate-foot">Cuando el vendedor te habilite, recarga esta página y entra de nuevo.</div>
+    <div class="gate-status"><button class="btn-logout" id="btnLogoutDenied" style="margin-top:8px">Cerrar sesión</button></div>
+  </div>
+</div>
+
+<div class="wrap app-hidden" id="appWrap">
+
+  <header>
+    <div class="brand">
+      <div class="eyebrow">Tarjeta de Crédito</div>
+      <h1>Control de <em>Gastos</em></h1>
+      <p class="subtitle">Escribe el valor en dólares o en pesos: se completa el otro con la TRM del día + 0,50%. Tus datos se guardan en tu cuenta.</p>
+    </div>
+
+    <div class="trm-card">
+      <div class="label"><span class="dot" id="trmDot"></span> TRM de hoy</div>
+      <div class="trm-value"><span id="trmValue">—</span><span class="cur">COP / USD</span></div>
+      <div class="trm-eff" id="trmEff">aplicada (+0,50%): —</div>
+      <div class="trm-meta">
+        <span id="trmDate">Cargando…</span>
+        <button id="trmRefresh">actualizar</button>
+        <button id="trmEdit">editar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="userbar">
+    <img id="ubAvatar" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
+    <div class="uinfo">
+      <div class="uname" id="ubName">—</div>
+      <div class="umail" id="ubMail">—</div>
+    </div>
+    <span class="badge-admin" id="ubAdmin" style="display:none">ADMIN</span>
+    <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+  </div>
+
+  <section class="admin" id="adminPanel" style="display:none">
+    <h2>Panel de administración</h2>
+    <div class="desc">Autoriza clientes pegando su correo de Google. Quita el acceso cuando dejen de pagar.</div>
+    <div class="admin-add">
+      <input type="email" id="adminEmail" placeholder="correo-del-cliente@gmail.com" autocomplete="off" />
+      <button id="btnAuthAdd">Autorizar</button>
+    </div>
+    <div class="auth-list" id="authList"></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="k">Total gastado (COP)</div>
+      <div class="v cop" id="totalCop">$0</div>
+      <div class="sub" id="countSub">0 compras registradas</div>
+    </div>
+    <div class="stat">
+      <div class="k">Total gastado (USD)</div>
+      <div class="v usd" id="totalUsd">$0.00</div>
+      <div class="sub">suma en dólares</div>
+    </div>
+    <div class="stat alt">
+      <div class="k">Cuota mensual estimada</div>
+      <div class="v green" id="totalCuota">$0</div>
+      <div class="sub">suma de cuotas del mes (COP)</div>
+    </div>
+    <div class="stat warn" id="cupoStat" style="display:none">
+      <div class="k">Cupo disponible</div>
+      <div class="v red" id="cupoLeft">$0</div>
+      <div class="sub" id="cupoSub">de tu cupo total</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span>＋</span> Nueva compra</h2>
+    <div class="edit-banner" id="editBanner" style="display:none">
+      ✎ Estás editando una compra registrada.
+      <button id="btnCancel">Cancelar edición</button>
+    </div>
+    <div class="form-grid">
+      <div class="field wide">
+        <label for="fDesc">Descripción de la compra</label>
+        <input type="text" id="fDesc" placeholder="Ej: Suscripción Adobe, Amazon, vuelo…" />
+      </div>
+      <div class="field">
+        <label for="fUsd">Valor (USD)</label>
+        <input type="number" id="fUsd" class="num" placeholder="0.00" step="0.01" min="0" />
+      </div>
+      <div class="field">
+        <label for="fCop">Valor (COP)</label>
+        <input type="number" id="fCop" class="num" placeholder="0" step="1" min="0" />
+      </div>
+      <div class="field">
+        <label for="fTrm">TRM base</label>
+        <input type="number" id="fTrm" class="num" placeholder="auto" step="0.01" min="0" />
+      </div>
+      <div class="field">
+        <label for="fCuotas">Cuotas</label>
+        <input type="number" id="fCuotas" class="num" placeholder="1" step="1" min="1" value="1" />
+      </div>
+      <div class="field">
+        <label for="fFecha">Fecha de compra</label>
+        <input type="date" id="fFecha" class="num" />
+      </div>
+      <button class="btn-add" id="btnAdd">Agregar</button>
+    </div>
+    <div class="rate-line" id="rateLine"><span class="tag">+0,50%</span> Tasa aplicada: —</div>
+    <div class="cupo-mini">
+      <label for="fCupo">Cupo total de la tarjeta (COP, opcional):</label>
+      <input type="number" id="fCupo" placeholder="ej: 10000000" step="1" min="0" />
+    </div>
+  </section>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th class="r">USD</th>
+            <th class="r">TRM +0,5%</th>
+            <th class="r">Valor (COP)</th>
+            <th class="c">Cuotas</th>
+            <th class="c"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="actions">
+    <p class="hint">💾 Tus datos se guardan en tu cuenta y se sincronizan en todos tus dispositivos al iniciar sesión.</p>
+    <div class="action-btns">
+      <button class="btn-ghost" id="btnExport">⬇ Exportar respaldo</button>
+      <button class="btn-ghost" id="btnImport">⬆ Importar</button>
+      <button class="btn-reset" id="btnReset">↺ Resetear todo</button>
+      <input type="file" id="fileImport" accept="application/json,.json" style="display:none" />
+    </div>
+  </div>
+
+</div>
+
+<script>
+  "use strict";
+
+  // ---------- Recargo de la tarjeta sobre la TRM ----------
+  const MARKUP = 0.5; // porcentaje (+0,50%)
+  const effFrom = (base) => base * (1 + MARKUP/100);
+
+  // ---------- Almacenamiento seguro (con try/catch por si el navegador lo bloquea) ----------
+  const KEY = "gastos_tc_v1";
+  const KEY_CUPO = "gastos_tc_cupo_v1";
+  const KEY_TRM = "gastos_tc_trm_v1";
+
+  function load(key, fallback){
+    try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ return fallback; }
+  }
+  function save(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }
+    catch(e){ /* modo solo-sesión si el almacenamiento está bloqueado */ }
+  }
+
+  let rows = load(KEY, []);            // [{id, desc, usd, trm, cop, cuotas, fecha}]
+  let cupo = load(KEY_CUPO, null);
+  let trm  = load(KEY_TRM, { value:null, date:null });
+
+  // ======================================================================
+  //  CONFIGURACIÓN — edita SOLO las líneas marcadas abajo
+  // ======================================================================
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCdGHtEFbGKtQUREkK1pcSpwU7SELfUcJU",
+    authDomain:        "gastos-tarjeta-b06fa.firebaseapp.com",
+    databaseURL:       "https://gastos-tarjeta-b06fa-default-rtdb.firebaseio.com",
+    projectId:         "gastos-tarjeta-b06fa",
+    storageBucket:     "gastos-tarjeta-b06fa.firebasestorage.app",
+    messagingSenderId: "427585677423",
+    appId:             "1:427585677423:web:c7181615523eb401e6859a"
+  };
+
+  // 👇 TU correo de Google de ADMINISTRADOR (el único que ve el panel y autoriza clientes)
+  const ADMIN_EMAIL = "PON_AQUI_TU_CORREO_ADMIN@gmail.com";
+
+  // 👇 Lo que verá el cliente en la pantalla de pago
+  const PAY_NEQUI   = "PON_AQUI_TU_NEQUI";
+  const PAY_CONTACT = "PON_AQUI_TU_CONTACTO";
+  // ======================================================================
+
+  let db = null, auth = null, currentUser = null, userRef = null, authListRef = null;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db   = firebase.database();
+  } catch(e){ console.error("Firebase no inició:", e); }
+
+  // Convierte un email en clave válida para la base de datos (sin . # $ [ ] /)
+  const emailKey = (em) => String(em).trim().toLowerCase().replace(/[.#$\[\]\/]/g, ",");
+
+  // Ruta de datos de cada usuario, aislada por su cuenta de Google
+  const dataPath = (uid) => "users/" + uid;
+
+  const isAdminEmail = (em) => em && em.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  // ---------- Refs de las pantallas ----------
+  const gateLoading = document.getElementById('gateLoading');
+  const gateLogin   = document.getElementById('gateLogin');
+  const gateDenied  = document.getElementById('gateDenied');
+  const appWrap     = document.getElementById('appWrap');
+  const loginStatus = document.getElementById('loginStatus');
+
+  function showOnly(el){
+    [gateLoading, gateLogin, gateDenied, appWrap].forEach(g => g && g.classList.add('app-hidden'));
+    if(el) el.classList.remove('app-hidden');
+  }
+
+  // Rellena la pantalla de pago
+  document.getElementById('payNequi').textContent   = PAY_NEQUI;
+  document.getElementById('payContact').textContent = PAY_CONTACT;
+
+  // ---------- Login / Logout ----------
+  document.getElementById('btnGoogle').addEventListener('click', ()=>{
+    if(!auth){ loginStatus.textContent = "Error de configuración."; return; }
+    loginStatus.textContent = "Abriendo Google…";
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err=>{
+      loginStatus.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
+      console.warn(err);
+    });
+  });
+  function doLogout(){ if(auth) auth.signOut(); }
+  document.getElementById('btnLogout').addEventListener('click', doLogout);
+  document.getElementById('btnLogoutDenied').addEventListener('click', doLogout);
+
+  // ---------- Persistencia (cada usuario guarda lo suyo) ----------
+  function cloudWrite(){
+    if(!userRef) return;
+    try{ userRef.set({ rows, cupo:(cupo==null?null:cupo), updatedAt:Date.now() }); }
+    catch(e){ console.warn("Error guardando:", e); }
+  }
+  function persist(){ save(KEY, rows); cloudWrite(); }
+  function persistCupo(){ save(KEY_CUPO, cupo); cloudWrite(); }
+
+  // ---------- Autorización ----------
+  function checkAuthorized(user){
+    if(isAdminEmail(user.email)) return Promise.resolve(true);
+    return db.ref('authorized/' + emailKey(user.email)).once('value')
+      .then(snap => snap.exists() && !!snap.val());
+  }
+
+  // ---------- Arranque de sesión ----------
+  function startApp(user){
+    currentUser = user;
+    document.getElementById('ubName').textContent = user.displayName || "Mi cuenta";
+    document.getElementById('ubMail').textContent = user.email || "";
+    if(user.photoURL) document.getElementById('ubAvatar').src = user.photoURL;
+    const admin = isAdminEmail(user.email);
+    document.getElementById('ubAdmin').style.display   = admin ? "" : "none";
+    document.getElementById('adminPanel').style.display = admin ? "" : "none";
+    if(admin) initAdmin();
+
+    userRef = db.ref(dataPath(user.uid));
+    userRef.on('value', snap=>{
+      const data = snap.val();
+      if(data && Array.isArray(data.rows)){
+        rows = data.rows || [];
+        cupo = (data.cupo==null?null:data.cupo);
+        save(KEY, rows); save(KEY_CUPO, cupo);
+        fCupo.value = cupo ? cupo : "";
+      } else {
+        rows = []; cupo = null; fCupo.value = "";
+      }
+      render();
+    });
+
+    showOnly(appWrap);
+    renderTrm(); render(); fetchTRM();
+  }
+
+  if(auth){
+    auth.onAuthStateChanged(user=>{
+      if(!user){ showOnly(gateLogin); return; }
+      showOnly(gateLoading);
+      document.getElementById('myEmail').textContent = user.email || "—";
+      checkAuthorized(user).then(ok=>{
+        if(ok) startApp(user); else showOnly(gateDenied);
+      }).catch(err=>{ console.warn(err); showOnly(gateDenied); });
+    });
+  } else {
+    showOnly(gateLogin);
+  }
+
+  // ---------- Panel de administración (solo admin) ----------
+  let adminInited = false;
+  function initAdmin(){
+    if(adminInited) return; adminInited = true;
+    const listEl = document.getElementById('authList');
+    authListRef = db.ref('authorized');
+    authListRef.on('value', snap=>{
+      const data = snap.val() || {};
+      const entries = Object.entries(data).filter(([k,v])=> v);
+      if(!entries.length){ listEl.innerHTML = '<div class="auth-empty">Aún no has autorizado a nadie.</div>'; return; }
+      listEl.innerHTML = entries.map(([k,v])=>{
+        const email = (typeof v === 'string') ? v : k.replace(/,/g,'.');
+        return '<div class="auth-item"><span class="em">'+escapeHtml(email)+'</span>'+
+               '<button data-k="'+escapeHtml(k)+'">Quitar</button></div>';
+      }).join('');
+      listEl.querySelectorAll('button[data-k]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          if(confirm("¿Quitar el acceso a este cliente?")) db.ref('authorized/'+b.dataset.k).remove();
+        });
+      });
+    });
+    document.getElementById('btnAuthAdd').addEventListener('click', addAuthorized);
+    document.getElementById('adminEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') addAuthorized(); });
+  }
+  function addAuthorized(){
+    const inp = document.getElementById('adminEmail');
+    const em = inp.value.trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ alert("Escribe un correo válido."); return; }
+    db.ref('authorized/'+emailKey(em)).set(em).then(()=>{ inp.value=""; });
+  }
+
+  // ---------- Formateadores ----------
+  const fmtCOP = new Intl.NumberFormat('es-CO', { style:'currency', currency:'COP', maximumFractionDigits:0 });
+  const fmtUSD = new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2 });
+  const fmtNum = new Intl.NumberFormat('es-CO', { maximumFractionDigits:2 });
+
+  // ---------- TRM ----------
+  const trmValueEl = document.getElementById('trmValue');
+  const trmDateEl  = document.getElementById('trmDate');
+  const trmDotEl   = document.getElementById('trmDot');
+  const trmEffEl   = document.getElementById('trmEff');
+  const fTrm       = document.getElementById('fTrm');
+
+  function renderTrm(){
+    if(trm.value){
+      trmValueEl.textContent = fmtNum.format(trm.value);
+      trmDateEl.textContent = trm.date ? ("Vigente: " + trm.date) : "—";
+      trmDotEl.className = "dot live";
+      trmEffEl.textContent = "aplicada (+0,50%): " + fmtNum.format(effFrom(trm.value)) + " COP/USD";
+      if(!fTrm.value) fTrm.value = trm.value;
+    } else {
+      trmValueEl.textContent = "—";
+      trmDateEl.textContent = "Sin datos";
+      trmDotEl.className = "dot err";
+      trmEffEl.textContent = "aplicada (+0,50%): —";
+    }
+    updateRateLine();
+  }
+
+  async function fetchTRM(){
+    trmDateEl.textContent = "Cargando…";
+    trmDotEl.className = "dot";
+    // API oficial de datos abiertos de Colombia (Superfinanciera). CORS habilitado.
+    const url = "https://www.datos.gov.co/resource/32sa-8pi3.json?$query=" +
+                encodeURIComponent("SELECT valor, vigenciadesde, vigenciahasta ORDER BY vigenciadesde DESC LIMIT 1");
+    try{
+      const res = await fetch(url, { headers:{ "Accept":"application/json" } });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      if(!data || !data.length) throw new Error("vacío");
+      const v = parseFloat(data[0].valor);
+      const d = (data[0].vigenciadesde || "").slice(0,10);
+      trm = { value: v, date: d };
+      save(KEY_TRM, trm);
+      fTrm.value = v;
+      renderTrm();
+    }catch(err){
+      // Falla la API → dejamos el valor guardado o pedimos manual
+      if(trm.value){ renderTrm(); }
+      else {
+        trmValueEl.textContent = "—";
+        trmDateEl.textContent = "API no disponible · usa “editar”";
+        trmDotEl.className = "dot err";
+      }
+    }
+  }
+
+  document.getElementById('trmRefresh').addEventListener('click', fetchTRM);
+  document.getElementById('trmEdit').addEventListener('click', ()=>{
+    const cur = trm.value ? trm.value : "";
+    const input = prompt("Escribe la TRM (pesos por dólar):", cur);
+    if(input === null) return;
+    const v = parseFloat(String(input).replace(/[^\d.]/g,''));
+    if(!isNaN(v) && v > 0){
+      const today = new Date().toISOString().slice(0,10);
+      trm = { value:v, date: today + " (manual)" };
+      save(KEY_TRM, trm);
+      fTrm.value = v;
+      renderTrm();
+    }
+  });
+
+  // ---------- Cupo ----------
+  const fCupo     = document.getElementById('fCupo');
+  const cupoStat  = document.getElementById('cupoStat');
+  const cupoLeft  = document.getElementById('cupoLeft');
+  const cupoSub   = document.getElementById('cupoSub');
+  if(cupo) fCupo.value = cupo;
+
+  fCupo.addEventListener('input', ()=>{
+    const v = parseFloat(fCupo.value);
+    cupo = (!isNaN(v) && v > 0) ? v : null;
+    persistCupo();
+    render();
+  });
+
+  // ---------- Agregar / eliminar ----------
+  const fDesc   = document.getElementById('fDesc');
+  const fUsd    = document.getElementById('fUsd');
+  const fCop    = document.getElementById('fCop');
+  const fCuotas = document.getElementById('fCuotas');
+  const fFecha  = document.getElementById('fFecha');
+  const rateLine= document.getElementById('rateLine');
+  const btnAdd    = document.getElementById('btnAdd');
+  const editBanner= document.getElementById('editBanner');
+
+  let editingId = null; // id de la compra que se está editando (null = nueva)
+
+  // Fecha local de hoy en formato YYYY-MM-DD (respeta la zona horaria de Colombia)
+  function todayISO(){
+    const d = new Date();
+    const local = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+    return local.toISOString().slice(0,10);
+  }
+  // Muestra la fecha bonita; soporta filas antiguas que guardaban texto
+  function fmtFecha(v){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+      const [y,m,da] = v.split('-').map(Number);
+      return new Date(y, m-1, da).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+    }
+    return v;
+  }
+  fFecha.value = todayISO();
+
+  let lastEdited = 'usd'; // cuál campo escribió el usuario de último
+
+  function currentBase(){
+    const v = parseFloat(fTrm.value);
+    return (!isNaN(v) && v > 0) ? v : (trm.value || 0);
+  }
+
+  function updateRateLine(){
+    const base = currentBase();
+    if(!base){ rateLine.innerHTML = '<span class="tag">+0,50%</span> Tasa aplicada: —'; return; }
+    const eff = effFrom(base);
+    rateLine.innerHTML = '<span class="tag">+0,50%</span> Tasa aplicada: TRM <b>' +
+      fmtNum.format(base) + '</b> + 0,50% = <b>' + fmtNum.format(eff) + '</b> COP/USD';
+  }
+
+  function recalc(source){
+    const base = currentBase();
+    if(!base) return;
+    if(source === 'usd'){
+      // USD → COP: con recargo (+0,50%)
+      const u = parseFloat(fUsd.value);
+      fCop.value = (!isNaN(u) && u > 0) ? Math.round(u * effFrom(base)) : '';
+    } else {
+      // COP → USD: TRM pura, sin recargo
+      const c = parseFloat(fCop.value);
+      fUsd.value = (!isNaN(c) && c > 0) ? (c / base).toFixed(2) : '';
+    }
+  }
+
+  fUsd.addEventListener('input', ()=>{ lastEdited = 'usd'; recalc('usd'); });
+  fCop.addEventListener('input', ()=>{ lastEdited = 'cop'; recalc('cop'); });
+  fTrm.addEventListener('input', ()=>{ updateRateLine(); recalc(lastEdited); });
+
+  function addRow(){
+    const desc   = fDesc.value.trim();
+    const base   = currentBase();
+    const cuotas = Math.max(1, parseInt(fCuotas.value) || 1);
+
+    if(!desc){ fDesc.focus(); return; }
+    if(!base || base <= 0){
+      alert("No hay TRM disponible. Usa el botón “editar” para escribirla manualmente.");
+      return;
+    }
+    const eff = effFrom(base);
+    let usd, cop, markup;
+
+    if(lastEdited === 'cop'){
+      // Escribió pesos → dólares con TRM pura (sin recargo)
+      cop = parseFloat(fCop.value);
+      if(isNaN(cop) || cop <= 0){ fCop.focus(); return; }
+      usd = cop / base;
+      markup = 0;
+    } else {
+      // Escribió dólares → pesos con recargo (+0,50%)
+      usd = parseFloat(fUsd.value);
+      if(isNaN(usd) || usd <= 0){ fUsd.focus(); return; }
+      cop = usd * eff;
+      markup = MARKUP;
+    }
+
+    if(editingId){
+      // Actualiza la compra existente conservando su id
+      const idx = rows.findIndex(x => x.id === editingId);
+      if(idx >= 0){
+        rows[idx] = { ...rows[idx], desc, usd, cop, trm: base, markup, cuotas, fecha: fFecha.value || todayISO() };
+      }
+      finishEdit();
+    } else {
+      rows.push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+        desc, usd, cop,
+        trm: base,
+        markup,
+        cuotas,
+        fecha: fFecha.value || todayISO()
+      });
+    }
+    persist();
+
+    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotas.value = "1";
+    fFecha.value = todayISO();
+    lastEdited = 'usd';
+    fDesc.focus();
+    render();
+  }
+
+  function startEdit(id){
+    const r = rows.find(x => x.id === id);
+    if(!r) return;
+    editingId = id;
+    fDesc.value   = r.desc;
+    fTrm.value    = r.trm;
+    fCuotas.value = r.cuotas;
+    fFecha.value  = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
+    fUsd.value    = r.usd.toFixed(2);
+    fCop.value    = Math.round(r.cop);
+    // El sentido se deduce del recargo guardado (con recargo = entró por USD)
+    lastEdited = (r.markup && r.markup > 0) ? 'usd' : 'cop';
+    updateRateLine();
+    btnAdd.textContent = 'Guardar cambios';
+    editBanner.style.display = '';
+    document.querySelector('.panel').scrollIntoView({ behavior:'smooth', block:'start' });
+    fDesc.focus();
+  }
+
+  function finishEdit(){
+    editingId = null;
+    btnAdd.textContent = 'Agregar';
+    editBanner.style.display = 'none';
+  }
+
+  function cancelEdit(){
+    finishEdit();
+    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotas.value = "1";
+    fFecha.value = todayISO();
+    lastEdited = 'usd';
+    updateRateLine();
+  }
+
+  document.getElementById('btnCancel').addEventListener('click', cancelEdit);
+
+  function delRow(id){
+    if(id === editingId) cancelEdit();
+    rows = rows.filter(r => r.id !== id);
+    persist();
+    render();
+  }
+
+  document.getElementById('btnAdd').addEventListener('click', addRow);
+  [fDesc, fUsd, fCop, fTrm, fCuotas, fFecha].forEach(el=>{
+    el.addEventListener('keydown', e=>{ if(e.key === 'Enter') addRow(); });
+  });
+
+  // ---------- Reset ----------
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    if(rows.length === 0 || confirm("¿Seguro que quieres borrar TODAS las compras registradas? Esta acción no se puede deshacer.")){
+      rows = [];
+      persist();
+      render();
+    }
+  });
+
+  // ---------- Exportar / Importar respaldo ----------
+  document.getElementById('btnExport').addEventListener('click', ()=>{
+    const backup = {
+      app: "control-gastos-tc",
+      version: 1,
+      exportadoEl: new Date().toISOString(),
+      rows: rows,
+      cupo: cupo
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = "respaldo-gastos-" + stamp + ".json";
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  const fileImport = document.getElementById('fileImport');
+  document.getElementById('btnImport').addEventListener('click', ()=> fileImport.click());
+
+  fileImport.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        if(!data || !Array.isArray(data.rows)) throw new Error("formato");
+        const msg = rows.length
+          ? "¿Reemplazar las compras actuales por las del respaldo? (" + data.rows.length + " compras)"
+          : "Importar " + data.rows.length + " compras del respaldo?";
+        if(!confirm(msg)) { fileImport.value = ""; return; }
+        rows = data.rows;
+        cupo = (data.cupo == null ? null : data.cupo);
+        fCupo.value = cupo ? cupo : "";
+        persist();      // guarda local y sube a la nube si estás conectado
+        render();
+        alert("Respaldo importado correctamente.");
+      }catch(err){
+        alert("Ese archivo no es un respaldo válido de la app.");
+      }
+      fileImport.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- Render ----------
+  const tbody  = document.getElementById('tbody');
+  const tfoot  = document.getElementById('tfoot');
+
+  function render(){
+    // Tabla
+    if(rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty">
+        <div class="big">Aún no hay compras</div>
+        <div>Agrega tu primera compra arriba para empezar a llevar el control.</div>
+      </div></td></tr>`;
+      tfoot.innerHTML = "";
+    } else {
+      tbody.innerHTML = rows.map(r=>{
+        const cuotaVal = r.cop / r.cuotas;
+        const eff = r.trm * (1 + (r.markup || 0)/100);
+        return `<tr>
+          <td>
+            <div class="desc">${escapeHtml(r.desc)}</div>
+            <div class="date">${fmtFecha(r.fecha)}</div>
+          </td>
+          <td class="r mono usd">${fmtUSD.format(r.usd)}</td>
+          <td class="r trm-cell mono">${fmtNum.format(eff)}<div class="sub-rate">TRM ${fmtNum.format(r.trm)}</div></td>
+          <td class="r mono cop">${fmtCOP.format(r.cop)}</td>
+          <td class="c">
+            <span class="cuota-pill">${r.cuotas}x</span>
+            <div class="cuota-val">${fmtCOP.format(cuotaVal)}/mes</div>
+          </td>
+          <td class="c"><div class="row-actions">
+            <button class="edit" title="Editar" data-id="${r.id}">✎</button>
+            <button class="del" title="Eliminar" data-id="${r.id}">✕</button>
+          </div></td>
+        </tr>`;
+      }).join("");
+
+      const totUsd   = rows.reduce((s,r)=> s + r.usd, 0);
+      const totCop   = rows.reduce((s,r)=> s + r.cop, 0);
+      tfoot.innerHTML = `<tr>
+        <td class="tlabel">Total</td>
+        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
+        <td></td>
+        <td class="r mono cop">${fmtCOP.format(totCop)}</td>
+        <td></td><td></td>
+      </tr>`;
+
+      tbody.querySelectorAll('.del').forEach(b=>{
+        b.addEventListener('click', ()=> delRow(b.dataset.id));
+      });
+      tbody.querySelectorAll('.edit').forEach(b=>{
+        b.addEventListener('click', ()=> startEdit(b.dataset.id));
+      });
+    }
+
+    // Stats
+    const totUsd   = rows.reduce((s,r)=> s + r.usd, 0);
+    const totCop   = rows.reduce((s,r)=> s + r.cop, 0);
+    const totCuota = rows.reduce((s,r)=> s + (r.cop / r.cuotas), 0);
+
+    document.getElementById('totalCop').textContent   = fmtCOP.format(totCop);
+    document.getElementById('totalUsd').textContent   = fmtUSD.format(totUsd);
+    document.getElementById('totalCuota').textContent = fmtCOP.format(totCuota);
+    document.getElementById('countSub').textContent   =
+      rows.length + (rows.length === 1 ? " compra registrada" : " compras registradas");
+
+    // Cupo
+    if(cupo){
+      const left = cupo - totCop;
+      cupoStat.style.display = "";
+      cupoLeft.textContent = fmtCOP.format(left);
+      cupoLeft.className = "v " + (left < 0 ? "red" : "green");
+      const pct = Math.max(0, Math.min(100, (totCop / cupo) * 100));
+      cupoSub.textContent = `usado ${pct.toFixed(0)}% de ${fmtCOP.format(cupo)}`;
+    } else {
+      cupoStat.style.display = "none";
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  // El arranque ahora lo controla la sesión (onAuthStateChanged → startApp).
+</script>
+</body>
+</html>
