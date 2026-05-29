@@ -2,8 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Control de Gastos</title>
+<meta name="description" content="Controla tus gastos, define tu objetivo de ahorro y convierte dólares a pesos con la TRM del día." />
+<!-- PWA: permite "instalar" la web como app en el celular -->
+<meta name="theme-color" content="#0c0d10" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Control de Gastos" />
+<!-- Ícono de la app (SVG con la inicial, dorado sobre oscuro) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' rx='40' fill='%230c0d10'/%3E%3Ctext x='50%25' y='50%25' font-family='Georgia,serif' font-size='100' fill='%23e0b357' text-anchor='middle' dominant-baseline='central'%3E%24%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='14' fill='%230c0d10'/%3E%3Ctext x='50%25' y='52%25' font-family='Georgia,serif' font-size='38' fill='%23e0b357' text-anchor='middle' dominant-baseline='central'%3E%24%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -580,6 +590,148 @@
     .form-grid .field.wide{ grid-column:1 / -1; }
     .btn-add{ grid-column:1 / -1; width:100%; }
   }
+
+  /* ============ RESPONSIVE INTEGRAL (móvil) ============ */
+  @media (max-width:760px){
+    body{ padding:16px; }
+    header{ gap:16px; margin-bottom:22px; }
+    .trm-card{ min-width:0; width:100%; padding:16px 18px; }
+    .trm-value{ font-size:24px; }
+    .subtitle{ font-size:14px; }
+    /* Stats en una sola columna para que se lean bien */
+    .stats{ grid-template-columns:1fr; gap:12px; }
+    .stat .v{ font-size:23px; }
+    /* Acciones (export/import/reset) a ancho completo y apiladas */
+    .actions{ flex-direction:column; align-items:stretch; }
+    .action-btns{ width:100%; }
+    .action-btns button{ flex:1 1 100%; }
+    /* Panel admin: botón a ancho completo */
+    .admin-add button{ flex:1 1 100%; }
+  }
+
+  @media (max-width:480px){
+    body{ padding:12px; }
+    h1{ font-size:30px; }
+    .gate{ padding:14px; }
+    .gate-card{ padding:24px 20px; }
+    /* Formulario de gasto: todo en una columna en pantallas muy pequeñas */
+    .form-grid{ grid-template-columns:1fr; }
+    .panel{ padding:18px; }
+    .table-card{ border-radius:14px; }
+    /* La tabla mantiene scroll horizontal pero con menos padding */
+    tbody td, thead th{ padding:12px 12px; }
+    .stat{ padding:16px 18px; }
+    .userbar{ padding:10px 12px; }
+    .userbar .btn-logout{ padding:8px 12px; font-size:12px; }
+    .demo-banner{ flex-direction:column; align-items:stretch; }
+    .demo-banner button{ width:100%; }
+  }
+
+  /* La tabla siempre se puede deslizar de lado en móvil sin romper el layout */
+  .table-scroll{ -webkit-overflow-scrolling:touch; }
+
+  /* ---------- Modal de instalación (tutorial) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:60; display:none;
+    align-items:center; justify-content:center; padding:20px;
+    background:rgba(0,0,0,.7); backdrop-filter:blur(4px);
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background:linear-gradient(180deg, var(--surface), var(--ink-2));
+    border:1px solid var(--line); border-radius:20px;
+    padding:26px; max-width:460px; width:100%; max-height:88vh; overflow-y:auto;
+    box-shadow:var(--shadow);
+  }
+  .modal h3{ font-family:'Fraunces',serif; font-weight:500; font-size:22px; margin-bottom:4px; }
+  .modal .msub{ color:var(--text-dim); font-size:14px; margin-bottom:20px; }
+  .tabs{ display:flex; gap:8px; margin-bottom:18px; }
+  .tabs button{
+    flex:1; background:var(--ink); border:1px solid var(--line); color:var(--text-dim);
+    border-radius:10px; padding:10px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:14px; font-weight:600; cursor:pointer; transition:all .16s;
+  }
+  .tabs button.active{ background:rgba(224,179,87,.14); color:var(--gold); border-color:var(--gold-soft); }
+  .steps{ display:none; }
+  .steps.active{ display:block; }
+  .step{
+    display:flex; gap:13px; align-items:flex-start; margin-bottom:14px;
+    font-size:14px; color:var(--text); line-height:1.5;
+  }
+  .step .n{
+    flex:0 0 26px; height:26px; border-radius:50%;
+    background:rgba(224,179,87,.15); color:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:13px; font-family:'JetBrains Mono',monospace;
+  }
+  .step b{ color:var(--gold); }
+  .modal-close{
+    width:100%; margin-top:8px; background:linear-gradient(180deg,var(--gold),var(--gold-soft));
+    color:#1a1404; border:none; border-radius:11px; padding:13px; font-weight:700;
+    font-family:'Hanken Grotesk',sans-serif; font-size:15px; cursor:pointer;
+  }
+  .modal-close:hover{ filter:brightness(1.07); }
+  .btn-install{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    border-radius:10px; padding:9px 14px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer; transition:all .16s;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn-install:hover{ border-color:var(--gold-soft); color:var(--gold); }
+
+  /* ---------- Pestañas de navegación (Gastos / Tarjeta) ---------- */
+  .nav-tabs{
+    display:flex; gap:8px; margin-bottom:26px;
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:14px; padding:6px;
+  }
+  .nav-tabs button{
+    flex:1; background:transparent; border:none; color:var(--text-dim);
+    border-radius:10px; padding:13px 16px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:15px; font-weight:600; cursor:pointer; transition:all .18s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .nav-tabs button.active{
+    background:linear-gradient(180deg, var(--gold), var(--gold-soft));
+    color:#1a1404; font-weight:700;
+  }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---------- Tarjeta visual de cupo ---------- */
+  .credit-card{
+    background:linear-gradient(135deg, #1c1f28 0%, #2a2418 60%, #1a1610 100%);
+    border:1px solid var(--line); border-radius:20px;
+    padding:24px; margin-bottom:24px; position:relative; overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .credit-card::after{
+    content:""; position:absolute; top:-40%; right:-10%;
+    width:280px; height:280px; border-radius:50%;
+    background:radial-gradient(circle, rgba(224,179,87,.12), transparent 70%);
+  }
+  .credit-card .cc-label{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-faint); font-weight:600; }
+  .credit-card .cc-avail{ font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:600; color:var(--gold); margin:8px 0; }
+  .credit-card .cc-avail.over{ color:var(--rose); }
+  .credit-card .cc-sub{ font-size:13px; color:var(--text-dim); }
+  .credit-card .progress{ margin:16px 0 0; height:8px; }
+  .cc-setup{ display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .cc-setup label{ font-size:13px; color:var(--text-dim); font-weight:600; }
+  .cc-setup input{
+    background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:9px;
+    padding:9px 12px; color:var(--text); font-family:'JetBrains Mono',monospace;
+    font-size:14px; width:180px;
+  }
+  .cc-setup input:focus{ outline:none; border-color:var(--gold-soft); }
+
+  /* Check del recargo en el formulario de tarjeta */
+  .markup-check{
+    display:flex; align-items:center; gap:9px; margin-top:14px;
+    font-size:13.5px; color:var(--text-dim); cursor:pointer; user-select:none;
+  }
+  .markup-check input{ width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
+  .markup-check b{ color:var(--gold); }
+  .markup-check .hint-mk{ font-size:12px; color:var(--text-faint); }
 </style>
 </head>
 <body>
@@ -672,6 +824,7 @@
   <div class="demo-banner" id="demoBanner" style="display:none">
     <div class="dtext"><b>Estás en modo prueba.</b> <span>Explora la app libremente. Al cerrar esta página no se guarda nada. Actívala y tus gastos quedan guardados en tu cuenta, sincronizados y disponibles desde cualquier dispositivo: todos los que abran tu correo verán lo mismo, al instante.</span></div>
     <button id="btnDemoBuy">¿Te gustó? Actívalo</button>
+    <button id="btnDemoInstall" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">📲 Instalar</button>
     <button id="btnDemoExit" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">Salir</button>
   </div>
 
@@ -682,6 +835,7 @@
       <div class="umail" id="ubMail">—</div>
     </div>
     <span class="badge-admin" id="ubAdmin" style="display:none">ADMIN</span>
+    <button class="btn-install" id="btnInstall">📲 Instalar app</button>
     <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
   </div>
 
@@ -694,6 +848,14 @@
     </div>
     <div class="auth-list" id="authList"></div>
   </section>
+
+  <nav class="nav-tabs">
+    <button id="navGastos" class="active">📊 Gastos del mes</button>
+    <button id="navTarjeta">💳 Mi tarjeta</button>
+  </nav>
+
+  <!-- ========================= VISTA: GASTOS DEL MES ========================= -->
+  <div class="view active" id="viewGastos">
 
   <section class="budget-setup" id="budgetSetup">
     <div class="bfield">
@@ -787,6 +949,96 @@
     <div id="catRows"></div>
   </section>
 
+  </div><!-- /viewGastos -->
+
+  <!-- ========================= VISTA: MI TARJETA DE CRÉDITO ========================= -->
+  <div class="view" id="viewTarjeta">
+
+    <div class="credit-card">
+      <div class="cc-label">💳 Cupo disponible</div>
+      <div class="cc-avail" id="ccAvail">—</div>
+      <div class="cc-sub" id="ccSub">define el cupo de tu tarjeta abajo</div>
+      <div class="progress"><div class="progress-bar" id="ccBar"></div></div>
+      <div class="cc-setup">
+        <label for="fCupo">Cupo total de la tarjeta (COP):</label>
+        <input type="number" id="fCupo" placeholder="ej: 10.000.000" step="1" min="0" />
+      </div>
+    </div>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="k">Deuda total (COP)</div>
+        <div class="v cop" id="ccDeudaCop">$0</div>
+        <div class="sub" id="ccCount">0 compras registradas</div>
+      </div>
+      <div class="stat">
+        <div class="k">Deuda total (USD)</div>
+        <div class="v usd" id="ccDeudaUsd">$0.00</div>
+        <div class="sub">equivalente en dólares</div>
+      </div>
+      <div class="stat alt">
+        <div class="k">Cuota mensual total</div>
+        <div class="v green" id="ccCuota">$0</div>
+        <div class="sub">suma de las cuotas del mes</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2><span>＋</span> Nueva compra con tarjeta</h2>
+      <div class="edit-banner" id="ccEditBanner" style="display:none">
+        ✎ Estás editando una compra.
+        <button id="ccBtnCancel">Cancelar edición</button>
+      </div>
+      <div class="form-grid">
+        <div class="field wide">
+          <label for="ccDesc">¿Qué compraste?</label>
+          <input type="text" id="ccDesc" placeholder="Ej: Mercado, Amazon, vuelo…" />
+        </div>
+        <div class="field">
+          <label for="ccCop">Valor (COP)</label>
+          <input type="number" id="ccCop" class="num" placeholder="0" step="1" min="0" />
+        </div>
+        <div class="field">
+          <label for="ccUsd">Valor (USD)</label>
+          <input type="number" id="ccUsd" class="num" placeholder="0.00" step="0.01" min="0" />
+        </div>
+        <div class="field">
+          <label for="ccCuotas">Cuotas</label>
+          <input type="number" id="ccCuotas" class="num" placeholder="1" step="1" min="1" value="1" />
+        </div>
+        <div class="field">
+          <label for="ccFecha">Fecha</label>
+          <input type="date" id="ccFecha" class="num" />
+        </div>
+        <button class="btn-add" id="ccBtnAdd">Agregar</button>
+      </div>
+      <label class="markup-check">
+        <input type="checkbox" id="ccMarkup" />
+        <span>Aplicar <b>+0,50%</b> por compra en dólares <span class="hint-mk">(recargo típico al pagar en moneda extranjera; solo afecta la conversión USD → COP)</span></span>
+      </label>
+      <div class="rate-line" id="ccRateLine">💱 TRM del día: <b id="ccRateInfo">—</b></div>
+    </section>
+
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Compra</th>
+              <th class="r">COP</th>
+              <th class="r">USD</th>
+              <th class="c">Cuotas</th>
+              <th class="c"></th>
+            </tr>
+          </thead>
+          <tbody id="ccTbody"></tbody>
+          <tfoot id="ccTfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /viewTarjeta -->
+
   <div class="actions">
     <p class="hint">💾 Tus datos se guardan en tu cuenta y se sincronizan en todos tus dispositivos al iniciar sesión.</p>
     <div class="action-btns">
@@ -799,8 +1051,85 @@
 
 </div>
 
+<!-- ===== Modal: instalar como app en el celular ===== -->
+<div class="modal-overlay" id="installModal">
+  <div class="modal">
+    <h3>📲 Instala la app en tu celular</h3>
+    <div class="msub">Agrégala a tu pantalla de inicio y ábrela como cualquier app, sin abrir el navegador.</div>
+    <div class="tabs">
+      <button id="tabIos" class="active">iPhone</button>
+      <button id="tabAndroid">Android</button>
+    </div>
+    <div class="steps active" id="stepsIos">
+      <div class="step"><span class="n">1</span><div>Abre esta página en <b>Safari</b> (no funciona en otros navegadores en iPhone).</div></div>
+      <div class="step"><span class="n">2</span><div>Toca el botón <b>Compartir</b> (el cuadrito con la flecha hacia arriba, abajo en el centro).</div></div>
+      <div class="step"><span class="n">3</span><div>Desliza y toca <b>“Agregar a inicio”</b> (Add to Home Screen).</div></div>
+      <div class="step"><span class="n">4</span><div>Toca <b>“Agregar”</b> arriba a la derecha. ¡Listo! Ya tienes el ícono en tu pantalla.</div></div>
+    </div>
+    <div class="steps" id="stepsAndroid">
+      <div class="step"><span class="n">1</span><div>Abre esta página en <b>Chrome</b>.</div></div>
+      <div class="step"><span class="n">2</span><div>Toca el menú de los <b>tres puntos</b> (arriba a la derecha).</div></div>
+      <div class="step"><span class="n">3</span><div>Toca <b>“Agregar a la pantalla principal”</b> o “Instalar aplicación”.</div></div>
+      <div class="step"><span class="n">4</span><div>Confirma con <b>“Agregar”</b>. El ícono quedará en tu pantalla de inicio.</div></div>
+    </div>
+    <button class="modal-close" id="closeInstall">Entendido</button>
+  </div>
+</div>
+
 <script>
   "use strict";
+
+  // ====== PWA: manifest embebido para que Android ofrezca "Instalar app" ======
+  (function(){
+    try{
+      const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Crect width='512' height='512' rx='110' fill='%230c0d10'/%3E%3Ctext x='50%25' y='52%25' font-family='Georgia,serif' font-size='290' fill='%23e0b357' text-anchor='middle' dominant-baseline='central'%3E%24%3C/text%3E%3C/svg%3E";
+      const manifest = {
+        name: "Control de Gastos",
+        short_name: "Gastos",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#0c0d10",
+        theme_color: "#0c0d10",
+        icons: [
+          { src: icon, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+          { src: icon, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+      const link = document.createElement('link');
+      link.rel = "manifest";
+      link.href = URL.createObjectURL(blob);
+      document.head.appendChild(link);
+    }catch(e){ /* si falla, la app sigue funcionando igual */ }
+  })();
+
+  // ====== Modal de instalación (tutorial iPhone / Android) ======
+  (function(){
+    const modal = document.getElementById('installModal');
+    const open  = ()=> modal.classList.add('show');
+    const close = ()=> modal.classList.remove('show');
+    const tabIos = document.getElementById('tabIos');
+    const tabAnd = document.getElementById('tabAndroid');
+    const stIos  = document.getElementById('stepsIos');
+    const stAnd  = document.getElementById('stepsAndroid');
+
+    // Detecta el sistema para mostrar la pestaña correcta por defecto
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || "");
+    function showIos(){ tabIos.classList.add('active'); tabAnd.classList.remove('active'); stIos.classList.add('active'); stAnd.classList.remove('active'); }
+    function showAnd(){ tabAnd.classList.add('active'); tabIos.classList.remove('active'); stAnd.classList.add('active'); stIos.classList.remove('active'); }
+    if(!isIOS) showAnd();
+
+    tabIos.addEventListener('click', showIos);
+    tabAnd.addEventListener('click', showAnd);
+    document.getElementById('closeInstall').addEventListener('click', close);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
+
+    // Botones que abren el tutorial
+    ['btnInstall','btnDemoInstall'].forEach(id=>{
+      const b = document.getElementById(id);
+      if(b) b.addEventListener('click', open);
+    });
+  })();
 
   // ---------- Categorías de gasto ----------
   const CATEGORIAS = [
@@ -829,9 +1158,15 @@
     catch(e){ /* modo solo-sesión si el almacenamiento está bloqueado */ }
   }
 
-  let rows = load(KEY, []);            // [{id, desc, cat, usd, cop, trm, fecha}]
+  let rows = load(KEY, []);            // gastos del mes [{id, desc, cat, usd, cop, trm, fecha}]
   let budget = load(KEY_BUDGET, { ingreso:null, objetivo:null, moneda:"COP" });
   let trm  = load(KEY_TRM, { value:null, date:null });
+
+  // Datos de la vista TARJETA DE CRÉDITO
+  const KEY_CC = "gastos_app_cc_v2";
+  const KEY_CUPO = "gastos_app_cupo_v2";
+  let ccRows = load(KEY_CC, []);       // compras tarjeta [{id, desc, usd, cop, trm, cuotas, markup, fecha}]
+  let cupo = load(KEY_CUPO, null);     // cupo total de la tarjeta
 
 
   // ======================================================================
@@ -940,23 +1275,25 @@
   //  En modo demo NO se guarda nada (ni local ni nube): es solo prueba.
   function cloudWrite(){
     if(demoMode || !userRef) return;
-    try{ userRef.set({ rows, budget, updatedAt:Date.now() }); }
+    try{ userRef.set({ rows, budget, ccRows, cupo:(cupo==null?null:cupo), updatedAt:Date.now() }); }
     catch(e){ console.warn("Error guardando:", e); }
   }
   function persist(){ if(!demoMode) save(KEY, rows); cloudWrite(); }
   function persistBudget(){ if(!demoMode) save(KEY_BUDGET, budget); cloudWrite(); }
+  function persistCC(){ if(!demoMode){ save(KEY_CC, ccRows); save(KEY_CUPO, cupo); } cloudWrite(); }
 
   // ---------- Modo DEMO (sin login, sin guardar) ----------
   function startDemo(){
     demoMode = true;
     currentUser = null; userRef = null;
     rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
+    ccRows = []; cupo = null;
     document.getElementById('demoBanner').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
-    fillBudgetInputs();
+    fillBudgetInputs(); fillCupoInput();
     showOnly(appWrap);
-    renderTrm(); render(); fetchTRM();
+    renderTrm(); render(); renderCC(); fetchTRM();
   }
 
   // ---------- Autorización ----------
@@ -982,20 +1319,18 @@
 
     userRef = db.ref(dataPath(user.uid));
     userRef.on('value', snap=>{
-      const data = snap.val();
-      if(data && Array.isArray(data.rows)){
-        rows = data.rows || [];
-        budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
-        save(KEY, rows); save(KEY_BUDGET, budget);
-      } else {
-        rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
-      }
-      fillBudgetInputs();
-      render();
+      const data = snap.val() || {};
+      rows   = Array.isArray(data.rows) ? data.rows : [];
+      budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
+      ccRows = Array.isArray(data.ccRows) ? data.ccRows : [];
+      cupo   = (data.cupo == null ? null : data.cupo);
+      save(KEY, rows); save(KEY_BUDGET, budget); save(KEY_CC, ccRows); save(KEY_CUPO, cupo);
+      fillBudgetInputs(); fillCupoInput();
+      render(); renderCC();
     });
 
     showOnly(appWrap);
-    renderTrm(); render(); fetchTRM();
+    renderTrm(); render(); renderCC(); fetchTRM();
   }
 
   if(auth){
@@ -1084,7 +1419,7 @@
       trm = { value: v, date: d };
       save(KEY_TRM, trm);
       renderTrm();
-      recalc(lastEdited);
+      recalc(lastEdited); ccUpdateRate(); if(ccLast==="usd") ccRecalc("usd");
     }catch(err){
       // Falla la API → dejamos el valor guardado o pedimos manual
       if(trm.value){ renderTrm(); }
@@ -1107,7 +1442,7 @@
       trm = { value:v, date: today + " (manual)" };
       save(KEY_TRM, trm);
       renderTrm();
-      recalc(lastEdited);
+      recalc(lastEdited); ccUpdateRate(); if(ccLast==="usd") ccRecalc("usd");
     }
   });
 
@@ -1269,10 +1604,10 @@
 
   // ---------- Reset ----------
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    if(rows.length === 0 || confirm("¿Seguro que quieres borrar TODOS los gastos registrados? Esta acción no se puede deshacer.")){
-      rows = [];
-      persist();
-      render();
+    if((rows.length === 0 && ccRows.length === 0) || confirm("¿Seguro que quieres borrar TODO (gastos del mes y compras de tarjeta)? Esta acción no se puede deshacer.")){
+      rows = []; ccRows = [];
+      persist(); persistCC();
+      render(); renderCC();
     }
   });
 
@@ -1280,10 +1615,12 @@
   document.getElementById('btnExport').addEventListener('click', ()=>{
     const backup = {
       app: "control-gastos",
-      version: 2,
+      version: 3,
       exportadoEl: new Date().toISOString(),
       rows: rows,
-      budget: budget
+      budget: budget,
+      ccRows: ccRows,
+      cupo: cupo
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type:"application/json" });
     const url = URL.createObjectURL(blob);
@@ -1306,15 +1643,14 @@
       try{
         const data = JSON.parse(reader.result);
         if(!data || !Array.isArray(data.rows)) throw new Error("formato");
-        const msg = rows.length
-          ? "¿Reemplazar los gastos actuales por los del respaldo? (" + data.rows.length + " gastos)"
-          : "¿Importar " + data.rows.length + " gastos del respaldo?";
-        if(!confirm(msg)) { fileImport.value = ""; return; }
+        if(!confirm("¿Reemplazar tus datos actuales por los del respaldo?")) { fileImport.value = ""; return; }
         rows = data.rows;
         budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
-        fillBudgetInputs();
-        persist();      // guarda local y sube a la nube si estás conectado
-        render();
+        ccRows = Array.isArray(data.ccRows) ? data.ccRows : [];
+        cupo = (data.cupo == null ? null : data.cupo);
+        fillBudgetInputs(); fillCupoInput();
+        persist(); persistCC();
+        render(); renderCC();
         alert("Respaldo importado correctamente.");
       }catch(err){
         alert("Ese archivo no es un respaldo válido de la app.");
@@ -1448,6 +1784,233 @@
         <div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${cat.color}"></div></div>
       </div>`;
     }).join("");
+  }
+
+  // ============================================================
+  //   NAVEGACIÓN ENTRE VISTAS (Gastos / Tarjeta)
+  // ============================================================
+  const viewGastos  = document.getElementById('viewGastos');
+  const viewTarjeta = document.getElementById('viewTarjeta');
+  const navGastos   = document.getElementById('navGastos');
+  const navTarjeta  = document.getElementById('navTarjeta');
+
+  function switchView(which){
+    const tarjeta = which === 'tarjeta';
+    viewGastos.classList.toggle('active', !tarjeta);
+    viewTarjeta.classList.toggle('active', tarjeta);
+    navGastos.classList.toggle('active', !tarjeta);
+    navTarjeta.classList.toggle('active', tarjeta);
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+  navGastos.addEventListener('click', ()=> switchView('gastos'));
+  navTarjeta.addEventListener('click', ()=> switchView('tarjeta'));
+
+  // ============================================================
+  //   VISTA TARJETA DE CRÉDITO
+  // ============================================================
+  const ccDesc   = document.getElementById('ccDesc');
+  const ccCop    = document.getElementById('ccCop');
+  const ccUsd    = document.getElementById('ccUsd');
+  const ccCuotas = document.getElementById('ccCuotas');
+  const ccFecha  = document.getElementById('ccFecha');
+  const ccMarkup = document.getElementById('ccMarkup');
+  const ccRateInfo = document.getElementById('ccRateInfo');
+  const ccBtnAdd = document.getElementById('ccBtnAdd');
+  const ccEditBanner = document.getElementById('ccEditBanner');
+  const fCupo    = document.getElementById('fCupo');
+
+  const CC_MARKUP = 0.5; // recargo opcional en compras en dólares
+  let ccEditingId = null;
+  let ccLast = 'cop';   // último campo escrito
+
+  ccFecha.value = todayISO();
+
+  function fillCupoInput(){ fCupo.value = (cupo != null ? cupo : ""); }
+  fillCupoInput();
+
+  fCupo.addEventListener('input', ()=>{
+    const v = parseFloat(fCupo.value);
+    cupo = (!isNaN(v) && v > 0) ? v : null;
+    persistCC(); renderCC();
+  });
+
+  // Tasa efectiva: con recargo solo si el check está activo
+  function ccEffRate(){
+    const t = trm.value || 0;
+    return ccMarkup.checked ? t * (1 + CC_MARKUP/100) : t;
+  }
+  function ccUpdateRate(){
+    const t = trm.value || 0;
+    if(!t){ ccRateInfo.textContent = "no disponible"; return; }
+    if(ccMarkup.checked) ccRateInfo.textContent = "1 USD = " + fmtNum.format(ccEffRate()) + " COP (con +0,50%)";
+    else ccRateInfo.textContent = "1 USD = " + fmtNum.format(t) + " COP";
+  }
+  function ccRecalc(source){
+    const t = trm.value || 0;
+    if(!t) return;
+    if(source === 'usd'){
+      // USD → COP: aplica recargo si el check está activo
+      const u = parseFloat(ccUsd.value);
+      ccCop.value = (!isNaN(u) && u > 0) ? Math.round(u * ccEffRate()) : '';
+    } else {
+      // COP → USD: TRM pura (el recargo solo aplica al comprar en dólares)
+      const c = parseFloat(ccCop.value);
+      ccUsd.value = (!isNaN(c) && c > 0) ? (c / t).toFixed(2) : '';
+    }
+  }
+  ccUsd.addEventListener('input', ()=>{ ccLast='usd'; ccRecalc('usd'); });
+  ccCop.addEventListener('input', ()=>{ ccLast='cop'; ccRecalc('cop'); });
+  ccMarkup.addEventListener('change', ()=>{ ccUpdateRate(); if(ccLast==='usd') ccRecalc('usd'); });
+
+  function ccAddRow(){
+    const desc = ccDesc.value.trim();
+    const t = trm.value || 0;
+    const cuotas = Math.max(1, parseInt(ccCuotas.value) || 1);
+    if(!desc){ ccDesc.focus(); return; }
+    if(!t || t <= 0){ alert("No hay TRM disponible. Usa “editar” en la tarjeta de la TRM."); return; }
+
+    let usd, cop, markup;
+    if(ccLast === 'usd'){
+      usd = parseFloat(ccUsd.value);
+      if(isNaN(usd) || usd <= 0){ ccUsd.focus(); return; }
+      markup = ccMarkup.checked ? CC_MARKUP : 0;
+      cop = usd * (markup ? t*(1+CC_MARKUP/100) : t);
+    } else {
+      cop = parseFloat(ccCop.value);
+      if(isNaN(cop) || cop <= 0){ ccCop.focus(); return; }
+      usd = cop / t;          // de pesos a dólares: TRM pura
+      markup = 0;
+    }
+
+    if(ccEditingId){
+      const idx = ccRows.findIndex(x => x.id === ccEditingId);
+      if(idx >= 0) ccRows[idx] = { ...ccRows[idx], desc, usd, cop, trm:t, cuotas, markup, fecha: ccFecha.value || todayISO() };
+      ccFinishEdit();
+    } else {
+      ccRows.push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+        desc, usd, cop, trm:t, cuotas, markup,
+        fecha: ccFecha.value || todayISO()
+      });
+    }
+    persistCC();
+    ccDesc.value=""; ccUsd.value=""; ccCop.value=""; ccCuotas.value="1"; ccMarkup.checked=false;
+    ccFecha.value = todayISO(); ccLast='cop';
+    ccDesc.focus(); renderCC();
+  }
+
+  function ccStartEdit(id){
+    const r = ccRows.find(x => x.id === id);
+    if(!r) return;
+    ccEditingId = id;
+    ccDesc.value = r.desc;
+    ccCuotas.value = r.cuotas || 1;
+    ccFecha.value = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
+    ccCop.value = Math.round(r.cop);
+    ccUsd.value = (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)).toFixed(2);
+    ccMarkup.checked = !!(r.markup && r.markup > 0);
+    ccLast = 'cop';
+    ccBtnAdd.textContent = 'Guardar cambios';
+    ccEditBanner.style.display = '';
+    viewTarjeta.querySelector('.panel').scrollIntoView({ behavior:'smooth', block:'start' });
+    ccDesc.focus();
+  }
+  function ccFinishEdit(){ ccEditingId=null; ccBtnAdd.textContent='Agregar'; ccEditBanner.style.display='none'; }
+  function ccCancelEdit(){
+    ccFinishEdit();
+    ccDesc.value=""; ccUsd.value=""; ccCop.value=""; ccCuotas.value="1"; ccMarkup.checked=false;
+    ccFecha.value = todayISO(); ccLast='cop';
+  }
+  document.getElementById('ccBtnCancel').addEventListener('click', ccCancelEdit);
+
+  function ccDelRow(id){
+    if(id === ccEditingId) ccCancelEdit();
+    ccRows = ccRows.filter(r => r.id !== id);
+    persistCC(); renderCC();
+  }
+
+  ccBtnAdd.addEventListener('click', ccAddRow);
+  [ccDesc, ccUsd, ccCop, ccCuotas, ccFecha].forEach(el=>{
+    el.addEventListener('keydown', e=>{ if(e.key === 'Enter') ccAddRow(); });
+  });
+
+  const ccTbody = document.getElementById('ccTbody');
+  const ccTfoot = document.getElementById('ccTfoot');
+
+  function renderCC(){
+    ccUpdateRate();
+    // Tabla de compras
+    if(ccRows.length === 0){
+      ccTbody.innerHTML = `<tr><td colspan="5"><div class="empty">
+        <div class="big">Aún no hay compras</div>
+        <div>Registra una compra de tu tarjeta arriba para llevar el control de tu cupo.</div>
+      </div></td></tr>`;
+      ccTfoot.innerHTML = "";
+    } else {
+      const ordered = ccRows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+      ccTbody.innerHTML = ordered.map(r=>{
+        const cuotaVal = r.cop / (r.cuotas || 1);
+        const mk = (r.markup && r.markup > 0) ? ' <span style="color:var(--gold);font-size:11px">+0,5%</span>' : '';
+        return `<tr>
+          <td>
+            <div class="desc">${escapeHtml(r.desc)}</div>
+            <div class="date">${fmtFecha(r.fecha)}</div>
+          </td>
+          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}</td>
+          <td class="r mono usd">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
+          <td class="c">
+            <span class="cuota-pill">${r.cuotas || 1}x</span>
+            <div class="cuota-val">${fmtCOP.format(cuotaVal)}/mes</div>
+          </td>
+          <td class="c"><div class="row-actions">
+            <button class="edit" title="Editar" data-id="${r.id}">✎</button>
+            <button class="del" title="Eliminar" data-id="${r.id}">✕</button>
+          </div></td>
+        </tr>`;
+      }).join("");
+
+      const totCop = ccRows.reduce((s,r)=> s + (r.cop||0), 0);
+      const totUsd = ccRows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
+      ccTfoot.innerHTML = `<tr>
+        <td class="tlabel">Total</td>
+        <td class="r mono cop">${fmtCOP.format(totCop)}</td>
+        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
+        <td></td><td></td>
+      </tr>`;
+
+      ccTbody.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=> ccDelRow(b.dataset.id)));
+      ccTbody.querySelectorAll('.edit').forEach(b=> b.addEventListener('click', ()=> ccStartEdit(b.dataset.id)));
+    }
+
+    // Totales / deuda
+    const totCop = ccRows.reduce((s,r)=> s + (r.cop||0), 0);
+    const totUsd = ccRows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
+    const totCuota = ccRows.reduce((s,r)=> s + ((r.cop||0)/(r.cuotas||1)), 0);
+    document.getElementById('ccDeudaCop').textContent = fmtCOP.format(totCop);
+    document.getElementById('ccDeudaUsd').textContent = fmtUSD.format(totUsd);
+    document.getElementById('ccCuota').textContent    = fmtCOP.format(totCuota);
+    document.getElementById('ccCount').textContent    =
+      ccRows.length + (ccRows.length === 1 ? " compra registrada" : " compras registradas");
+
+    // Cupo disponible (tarjeta visual)
+    const ccAvail = document.getElementById('ccAvail');
+    const ccSub   = document.getElementById('ccSub');
+    const ccBar   = document.getElementById('ccBar');
+    if(cupo){
+      const left = cupo - totCop;
+      ccAvail.textContent = fmtCOP.format(left);
+      ccAvail.className = "cc-avail" + (left < 0 ? " over" : "");
+      const pct = Math.max(0, Math.min(100, (totCop / cupo) * 100));
+      ccSub.textContent = left < 0
+        ? `te pasaste ${fmtCOP.format(Math.abs(left))} de tu cupo de ${fmtCOP.format(cupo)}`
+        : `usado ${pct.toFixed(0)}% de tu cupo de ${fmtCOP.format(cupo)}`;
+      ccBar.style.width = pct + "%";
+      ccBar.className = "progress-bar" + (pct >= 100 ? " over" : pct >= 80 ? " warn" : "");
+    } else {
+      ccAvail.textContent = "—"; ccAvail.className = "cc-avail";
+      ccSub.textContent = "define el cupo de tu tarjeta abajo";
+      ccBar.style.width = "0%"; ccBar.className = "progress-bar";
+    }
   }
 
   function escapeHtml(s){
