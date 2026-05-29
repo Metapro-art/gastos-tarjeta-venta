@@ -367,6 +367,7 @@
   .gate-foot{ margin-top:22px; font-size:13px; color:var(--text-dim); line-height:1.6; }
   .privacy-link{ color:var(--gold); text-decoration:underline; cursor:pointer; font-weight:600; }
   .privacy-link:hover{ filter:brightness(1.15); }
+  .app-foot{ text-align:center; margin:8px 0 28px; font-size:12.5px; }
   .disclaimer .privacy-link{ color:var(--gold); }
   .gate-status{ margin-top:16px; font-size:13px; color:var(--text-dim); min-height:18px; }
 
@@ -931,6 +932,7 @@
   .demo-price .dp-title b{ font-family:'JetBrains Mono',monospace; color:var(--emerald); font-weight:600; }
   .demo-price .dp-sub{ font-size:13.5px; color:var(--text-dim); line-height:1.55; }
   .demo-price .dp-login{ font-size:13px; color:var(--text-dim); margin-top:10px; }
+  .demo-price .dp-privacy{ font-size:12.5px; margin-top:8px; }
   .demo-price .dp-login button{
     background:none; border:none; color:var(--emerald); font-weight:700; cursor:pointer;
     font-family:inherit; font-size:13px; text-decoration:underline; padding:0;
@@ -1102,6 +1104,7 @@
     </button>
     <div class="gate-status" id="loginStatus"></div>
     <button class="gate-back" id="btnBackFromLogin">← Volver</button>
+    <div class="gate-foot" style="margin-top:16px"><a href="#" class="privacy-link">Política de privacidad</a></div>
   </div>
 </div>
 
@@ -1154,6 +1157,7 @@
       <div class="dp-title">Estás probando la app — actívala por <b>$20.000 COP</b>, pago único</div>
       <div class="dp-sub">En modo prueba nada se guarda. Al activarla (pago único, sin mensualidades), inicias sesión con tu Gmail y <b>toda tu información queda sincronizada</b>: accede desde cualquier dispositivo con tu correo y siempre la tendrás ahí, al instante.</div>
       <div class="dp-login">¿Ya tienes acceso? <button id="btnDemoLogin">Inicia sesión aquí</button></div>
+      <div class="dp-privacy"><a href="#" class="privacy-link">Política de privacidad</a></div>
     </div>
     <div class="dp-actions">
       <button class="dp-btn" id="btnDemoPriceBuy">Activar mi acceso</button>
@@ -1480,6 +1484,10 @@
     <p class="export-note"><b>Exportar mis gastos</b> te deja descargar tu información en tres formatos: <b>Excel</b> (una hoja de cálculo que puedes abrir en Excel o Google Sheets para hacer tus propias cuentas), <b>PDF</b> (un documento listo para imprimir o archivar) y <b>copia de seguridad</b> (un archivo .json que luego puedes volver a cargar con “Importar”). Todos incluyen tus gastos del mes, las compras y los pagos de tu tarjeta.</p>
   </div>
 
+  <div class="app-foot">
+    <a href="#" class="privacy-link">Política de privacidad</a>
+  </div>
+
 </div>
 
 <!-- Toast (aviso flotante) -->
@@ -1511,8 +1519,9 @@
       <h4>2. Para qué usamos tus datos</h4>
       <p>Tus datos se usan con un único fin: que la aplicación funcione y puedas ver tu información sincronizada desde cualquier dispositivo donde inicies sesión. <b>No usamos tu información para ningún otro propósito.</b></p>
 
-      <h4>3. No vendemos ni compartimos tu información</h4>
-      <p>Tus datos <b>no se venden, no se alquilan ni se comparten</b> con terceros, anunciantes ni empresas de mercadeo. No mostramos publicidad basada en tu información. Tu información es tuya.</p>
+      <h4>3. No vendemos ni compartimos tu información personal</h4>
+      <p>Tus datos personales identificables <b>no se venden, no se alquilan ni se comparten</b> con terceros, anunciantes ni empresas de mercadeo. No mostramos publicidad basada en tu información. Tu información es tuya.</p>
+      <p>Lo único que podríamos llegar a utilizar son <b>estadísticas anónimas y agregadas</b> (por ejemplo, “cuántos usuarios en promedio registran gastos de transporte”), sin que sea posible identificarte a ti ni a ningún usuario individual. Estas estadísticas sirven para mejorar la aplicación y entender tendencias generales, y nunca exponen tu información personal.</p>
 
       <h4>4. Dónde se guardan</h4>
       <p>Tus datos se almacenan de forma segura en los servidores de Google (Firebase), una plataforma reconocida que cumple estándares internacionales de seguridad. La conexión está cifrada. Solo tú, al iniciar sesión con tu correo, puedes ver tu propia información.</p>
@@ -1524,7 +1533,7 @@
       <p>Conservamos tu información mientras tu cuenta esté activa. Si solicitas eliminarla, o si el servicio se descontinúa, tus datos serán borrados.</p>
 
       <h4>7. Contacto</h4>
-      <p>El responsable del tratamiento de los datos atenderá tus solicitudes en: <b><span id="privacyEmail">juandavid00@gmail.com</span></b></p>
+      <p>El responsable del tratamiento de los datos atenderá tus solicitudes en: <b><span id="privacyEmail">metaproecosystem@gmail.com</span></b></p>
 
       <h4>8. Aceptación</h4>
       <p>Al activar tu acceso e iniciar sesión, aceptas esta política de privacidad y autorizas el tratamiento de tus datos en los términos aquí descritos.</p>
@@ -1898,7 +1907,7 @@
   // 👇 Datos de pago/contacto que verá el cliente
   const PAY_BREB    = "@arango3803";         // tu llave BreB para recibir pagos
   const WHATSAPP    = "573152003303";        // tu WhatsApp con código de país (57 = Colombia)
-  const PRIVACY_EMAIL = "juandavid00@gmail.com";  // 👈 correo de contacto para temas de datos/privacidad
+  const PRIVACY_EMAIL = "metaproecosystem@gmail.com";  // 👈 correo de contacto para temas de datos/privacidad
   const PRECIO      = "$20.000 COP";         // valor del acceso (pago único)
   // ======================================================================
 
