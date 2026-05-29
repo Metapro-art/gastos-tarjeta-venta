@@ -1267,6 +1267,7 @@
       <option value="fecha-asc">Más antiguos</option>
       <option value="valor-desc">Mayor valor</option>
       <option value="valor-asc">Menor valor</option>
+      <option value="categoria">Por categoría</option>
     </select>
   </div>
 
@@ -2222,10 +2223,31 @@
   // Ordena una lista de registros según el criterio elegido
   function sortRecords(arr, criterio){
     const a = arr.slice();
+    // índice de cada categoría según el orden de la lista base (para agrupar de forma lógica)
+    const catOrden = {};
+    CATEGORIAS_BASE.forEach((c,i)=> catOrden[c.id] = i);
     switch(criterio){
       case 'fecha-asc':  a.sort((x,y)=> String(x.fecha).localeCompare(String(y.fecha))); break;
       case 'valor-desc': a.sort((x,y)=> (y.cop||0) - (x.cop||0)); break;
       case 'valor-asc':  a.sort((x,y)=> (x.cop||0) - (y.cop||0)); break;
+      case 'categoria':
+        a.sort((x,y)=>{
+          // 1) por categoría (orden de la lista)
+          const cx = catOrden[x.cat] != null ? catOrden[x.cat] : 999;
+          const cy = catOrden[y.cat] != null ? catOrden[y.cat] : 999;
+          if(cx !== cy) return cx - cy;
+          // 2) dentro de la categoría, por subcategoría (alfabético; las sin subcategoría van al final)
+          const sx = (x.subcat || "").toLowerCase();
+          const sy = (y.subcat || "").toLowerCase();
+          if(sx !== sy){
+            if(!sx) return 1;
+            if(!sy) return -1;
+            return sx.localeCompare(sy);
+          }
+          // 3) y por fecha más reciente
+          return String(y.fecha).localeCompare(String(x.fecha));
+        });
+        break;
       case 'fecha-desc':
       default:           a.sort((x,y)=> String(y.fecha).localeCompare(String(x.fecha))); break;
     }
