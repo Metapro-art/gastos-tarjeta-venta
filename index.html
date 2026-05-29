@@ -297,6 +297,73 @@
   .pay-box .row .val{ color:var(--text); font-weight:600; font-family:'JetBrains Mono',monospace; word-break:break-all; }
   .pay-box .email-mine{ color:var(--gold); }
 
+  /* ---------- Botones de bienvenida ---------- */
+  .gate-actions{ display:flex; flex-direction:column; gap:12px; margin-top:8px; }
+  .btn-try{
+    display:inline-flex; align-items:center; gap:10px; justify-content:center;
+    background:linear-gradient(180deg, var(--gold), var(--gold-soft)); color:#1a1404;
+    border:none; border-radius:12px; padding:15px 24px;
+    font-family:'Hanken Grotesk',sans-serif; font-size:16px; font-weight:700;
+    cursor:pointer; transition:transform .12s, filter .18s; width:100%;
+  }
+  .btn-try:hover{ filter:brightness(1.07); transform:translateY(-1px); }
+  .btn-have{
+    display:inline-flex; align-items:center; gap:10px; justify-content:center;
+    background:transparent; color:var(--text-dim); border:1px solid var(--line);
+    border-radius:12px; padding:14px 24px;
+    font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600;
+    cursor:pointer; transition:all .16s; width:100%;
+  }
+  .btn-have:hover{ border-color:var(--gold-soft); color:var(--gold); }
+  .gate-feats{ list-style:none; padding:0; margin:20px 0 4px; text-align:left; }
+  .gate-feats li{ font-size:13.5px; color:var(--text-dim); padding:5px 0 5px 26px; position:relative; }
+  .gate-feats li::before{ content:"✓"; position:absolute; left:0; color:var(--emerald); font-weight:700; }
+
+  /* ---------- Banner modo demo ---------- */
+  .demo-banner{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:linear-gradient(160deg, rgba(224,179,87,.12), rgba(95,197,155,.06));
+    border:1px solid rgba(224,179,87,.32); border-radius:14px;
+    padding:14px 18px; margin-bottom:24px;
+  }
+  .demo-banner .dtext{ flex:1; min-width:200px; font-size:13.5px; color:var(--text); line-height:1.5; }
+  .demo-banner .dtext b{ color:var(--gold); }
+  .demo-banner .dtext span{ color:var(--text-dim); }
+  .demo-banner button{
+    background:linear-gradient(180deg, var(--gold), var(--gold-soft)); color:#1a1404;
+    border:none; border-radius:10px; padding:11px 20px; font-weight:700; cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; white-space:nowrap;
+    transition:transform .12s, filter .18s;
+  }
+  .demo-banner button:hover{ filter:brightness(1.07); transform:translateY(-1px); }
+
+  /* ---------- Precio, contacto y descargo ---------- */
+  .price-pill{
+    display:inline-block; background:rgba(95,197,155,.12); color:var(--emerald);
+    border:1px solid rgba(95,197,155,.3); border-radius:999px;
+    padding:8px 18px; font-size:15px; font-weight:700; margin:4px 0 2px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .price-pill small{ font-weight:500; color:var(--text-dim); font-size:12px; }
+  .btn-wa{
+    display:inline-flex; align-items:center; gap:10px; justify-content:center;
+    background:#25D366; color:#062a13; border:none; border-radius:12px;
+    padding:14px 22px; font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:700;
+    cursor:pointer; transition:transform .12s, filter .18s; width:100%; text-decoration:none;
+  }
+  .btn-wa:hover{ filter:brightness(1.04); transform:translateY(-1px); }
+  .btn-wa svg{ width:20px; height:20px; }
+  .disclaimer{
+    font-size:11px; color:var(--text-faint); line-height:1.55;
+    margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft);
+  }
+  .gate-back{
+    background:none; border:none; color:var(--text-faint); cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:13px; margin-top:14px;
+    text-decoration:underline;
+  }
+  .gate-back:hover{ color:var(--text-dim); }
+
   /* ---------- User bar ---------- */
   .userbar{
     display:flex; align-items:center; gap:12px; flex-wrap:wrap;
@@ -451,35 +518,58 @@
   </div>
 </div>
 
-<!-- ===== Pantalla de login ===== -->
-<div class="gate app-hidden" id="gateLogin">
+<!-- ===== Pantalla de BIENVENIDA ===== -->
+<div class="gate app-hidden" id="gateWelcome">
   <div class="gate-card">
     <div class="eyebrow">Tarjeta de Crédito</div>
     <h1>Control de <em>Gastos</em></h1>
-    <p>Lleva el control de tus compras en dólares y pesos, con la TRM del día. Inicia sesión para acceder a tu cuenta.</p>
+    <p>Registra tus compras en dólares y mira al instante cuánto es en pesos con la TRM del día. Lleva el control de tu cupo y tus cuotas.</p>
+    <ul class="gate-feats">
+      <li>Conversión USD ↔ COP con la TRM oficial del día</li>
+      <li>Control de cuotas y cuánto te queda de cupo</li>
+      <li>Tus datos sincronizados en todos tus dispositivos</li>
+    </ul>
+    <div class="gate-actions">
+      <button class="btn-try" id="btnTry">Probar gratis</button>
+      <button class="btn-have" id="btnHave">Ya tengo acceso</button>
+    </div>
+    <div class="gate-foot">Pruébala sin registrarte. Si te gusta, actívala por un pago único.</div>
+  </div>
+</div>
+
+<!-- ===== Pantalla de login ===== -->
+<div class="gate app-hidden" id="gateLogin">
+  <div class="gate-card">
+    <div class="eyebrow">Iniciar sesión</div>
+    <h1>Bienvenido de <em>vuelta</em></h1>
+    <p>Inicia sesión con la cuenta de Google que tienes habilitada para acceder a tu control de gastos.</p>
     <button class="btn-google" id="btnGoogle">
       <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.3 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3-.8-4.4s.3-3 .8-4.4l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.6 10.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.4 2.1-6.3 0-11.7-4.2-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
       Iniciar sesión con Google
     </button>
     <div class="gate-status" id="loginStatus"></div>
-    <div class="gate-foot">Tus datos quedan asociados a tu cuenta y solo tú los ves.</div>
+    <button class="gate-back" id="btnBackFromLogin">← Volver</button>
   </div>
 </div>
 
-<!-- ===== Pantalla de acceso no autorizado ===== -->
+<!-- ===== Pantalla ACTIVAR ACCESO (no autorizados y aviso demo) ===== -->
 <div class="gate app-hidden" id="gateDenied">
   <div class="gate-card denied">
     <div class="ico">🔒</div>
-    <div class="eyebrow">Acceso pendiente</div>
+    <div class="eyebrow">Activa tu acceso</div>
     <h1>Activa tu <em>acceso</em></h1>
-    <p>Tu cuenta aún no está habilitada. Para activarla, realiza el pago y envía tu correo al vendedor; en minutos quedarás habilitado.</p>
+    <p id="deniedText">Para usar la app con tus datos guardados, actívala con un pago único. Te habilitamos en minutos.</p>
+    <div class="price-pill">$15.000 COP <small>· pago único</small></div>
     <div class="pay-box">
-      <div class="row"><span class="lbl">Pago Nequi</span><span class="val" id="payNequi">PON_AQUI_TU_NEQUI</span></div>
-      <div class="row"><span class="lbl">Tu correo</span><span class="val email-mine" id="myEmail">—</span></div>
-      <div class="row"><span class="lbl">Escríbeme</span><span class="val" id="payContact">PON_AQUI_TU_CONTACTO</span></div>
+      <div class="row"><span class="lbl">Pago Nequi</span><span class="val" id="payNequi">—</span></div>
+      <div class="row" id="myEmailRow" style="display:none"><span class="lbl">Tu correo</span><span class="val email-mine" id="myEmail">—</span></div>
     </div>
-    <div class="gate-foot">Cuando el vendedor te habilite, recarga esta página y entra de nuevo.</div>
-    <div class="gate-status"><button class="btn-logout" id="btnLogoutDenied" style="margin-top:8px">Cerrar sesión</button></div>
+    <a class="btn-wa" id="btnWhatsapp" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 .5C7.4.5.5 7.4.5 16c0 2.8.7 5.4 2 7.8L.5 31.5l7.9-2c2.3 1.2 4.9 1.9 7.6 1.9 8.6 0 15.5-6.9 15.5-15.5S24.6.5 16 .5zm0 28.3c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-4.7 1.2 1.3-4.6-.3-.5c-1.3-2.1-2-4.5-2-7C3.1 8.9 8.9 3.1 16 3.1S28.9 8.9 28.9 16 23.1 28.8 16 28.8zm7.1-9.6c-.4-.2-2.3-1.1-2.6-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3.1-1.9-1.1-1-1.9-2.3-2.1-2.6-.2-.4 0-.6.2-.8.2-.2.4-.4.6-.7.2-.2.3-.4.4-.6.1-.3 0-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.7c-.2 0-.6.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.3 3.6 1.5 3.9c.2.3 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.3-.9 2.6-1.8.3-.9.3-1.7.2-1.8-.1-.2-.3-.3-.7-.5z"/></svg>
+      Escríbeme por WhatsApp
+    </a>
+    <div class="gate-status" id="deniedActions"></div>
+    <div class="disclaimer">El acceso a esta aplicación es un servicio y no garantiza disponibilidad perpetua. El servicio puede modificarse o suspenderse en cualquier momento sin previo aviso. Al activar tu acceso, aceptas estas condiciones.</div>
   </div>
 </div>
 
@@ -504,7 +594,13 @@
     </div>
   </header>
 
-  <div class="userbar">
+  <div class="demo-banner" id="demoBanner" style="display:none">
+    <div class="dtext"><b>Estás en modo prueba.</b> <span>Puedes usar todo, pero los datos no se guardan al salir.</span></div>
+    <button id="btnDemoBuy">¿Te gustó? Actívalo</button>
+    <button id="btnDemoExit" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">Salir</button>
+  </div>
+
+  <div class="userbar" id="userbar">
     <img id="ubAvatar" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
     <div class="uinfo">
       <div class="uname" id="ubName">—</div>
@@ -659,12 +755,14 @@
   // 👇 TU correo de Google de ADMINISTRADOR (el único que ve el panel y autoriza clientes)
   const ADMIN_EMAIL = "juandavid00@gmail.com";
 
-  // 👇 Lo que verá el cliente en la pantalla de pago
-  const PAY_NEQUI   = "3152003303";
-  const PAY_CONTACT = "Admin";
+  // 👇 Datos de pago/contacto que verá el cliente
+  const PAY_NEQUI   = "315 200 3303";        // tu número de Nequi
+  const WHATSAPP    = "573152003303";        // tu WhatsApp con código de país (57 = Colombia)
+  const PRECIO      = "$15.000 COP";         // valor del acceso (pago único)
   // ======================================================================
 
   let db = null, auth = null, currentUser = null, userRef = null, authListRef = null;
+  let demoMode = false; // true cuando el usuario está "probando" sin guardar
   try {
     firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
@@ -673,27 +771,62 @@
 
   // Convierte un email en clave válida para la base de datos (sin . # $ [ ] /)
   const emailKey = (em) => String(em).trim().toLowerCase().replace(/[.#$\[\]\/]/g, ",");
-
-  // Ruta de datos de cada usuario, aislada por su cuenta de Google
   const dataPath = (uid) => "users/" + uid;
-
   const isAdminEmail = (em) => em && em.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   // ---------- Refs de las pantallas ----------
   const gateLoading = document.getElementById('gateLoading');
+  const gateWelcome = document.getElementById('gateWelcome');
   const gateLogin   = document.getElementById('gateLogin');
   const gateDenied  = document.getElementById('gateDenied');
   const appWrap     = document.getElementById('appWrap');
   const loginStatus = document.getElementById('loginStatus');
 
   function showOnly(el){
-    [gateLoading, gateLogin, gateDenied, appWrap].forEach(g => g && g.classList.add('app-hidden'));
+    [gateLoading, gateWelcome, gateLogin, gateDenied, appWrap].forEach(g => g && g.classList.add('app-hidden'));
     if(el) el.classList.remove('app-hidden');
   }
 
-  // Rellena la pantalla de pago
-  document.getElementById('payNequi').textContent   = PAY_NEQUI;
-  document.getElementById('payContact').textContent = PAY_CONTACT;
+  // ---------- Pantalla "Activa tu acceso": rellenar datos y link de WhatsApp ----------
+  document.getElementById('payNequi').textContent = PAY_NEQUI;
+  document.querySelector('.price-pill').innerHTML = PRECIO + ' <small>· pago único</small>';
+
+  function buildWhatsappLink(email){
+    const msg = "Hola, quiero activar mi acceso a Control de Gastos. Ya realicé el pago de " + PRECIO +
+                " por Nequi (adjunto captura). Mi correo de Google es: " + (email || "");
+    return "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
+  }
+  // Muestra la pantalla de activación. origin = 'demo' o 'login'
+  function showActivate(origin, email){
+    document.getElementById('btnWhatsapp').href = buildWhatsappLink(email);
+    const myRow = document.getElementById('myEmailRow');
+    const acts  = document.getElementById('deniedActions');
+    const txt   = document.getElementById('deniedText');
+    if(origin === 'login'){
+      txt.textContent = "Tu cuenta aún no está habilitada. Realiza el pago y escríbeme por WhatsApp con tu correo; te habilito en minutos. Luego recarga la página.";
+      document.getElementById('myEmail').textContent = email || "—";
+      myRow.style.display = "";
+      acts.innerHTML = '<button class="btn-logout" id="btnLogoutDenied" style="margin-top:8px">Cerrar sesión</button>';
+      document.getElementById('btnLogoutDenied').addEventListener('click', doLogout);
+    } else {
+      txt.textContent = "¿Te gustó la app? Actívala para guardar tus datos y usarla en todos tus dispositivos. Realiza el pago y escríbeme por WhatsApp; te habilito en minutos.";
+      myRow.style.display = "none";
+      acts.innerHTML = '<button class="gate-back" id="btnBackDemo">← Volver a la prueba</button>';
+      document.getElementById('btnBackDemo').addEventListener('click', ()=> showOnly(appWrap));
+    }
+    showOnly(gateDenied);
+  }
+
+  // ---------- Navegación de bienvenida ----------
+  document.getElementById('btnTry').addEventListener('click', startDemo);
+  document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
+  document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
+  document.getElementById('btnDemoBuy').addEventListener('click', ()=> showActivate('demo'));
+  document.getElementById('btnDemoExit').addEventListener('click', ()=>{
+    demoMode = false;
+    document.getElementById('demoBanner').style.display = "none";
+    showOnly(gateWelcome);
+  });
 
   // ---------- Login / Logout ----------
   document.getElementById('btnGoogle').addEventListener('click', ()=>{
@@ -707,16 +840,29 @@
   });
   function doLogout(){ if(auth) auth.signOut(); }
   document.getElementById('btnLogout').addEventListener('click', doLogout);
-  document.getElementById('btnLogoutDenied').addEventListener('click', doLogout);
 
-  // ---------- Persistencia (cada usuario guarda lo suyo) ----------
+  // ---------- Persistencia ----------
+  //  En modo demo NO se guarda nada (ni local ni nube): es solo prueba.
   function cloudWrite(){
-    if(!userRef) return;
+    if(demoMode || !userRef) return;
     try{ userRef.set({ rows, cupo:(cupo==null?null:cupo), updatedAt:Date.now() }); }
     catch(e){ console.warn("Error guardando:", e); }
   }
-  function persist(){ save(KEY, rows); cloudWrite(); }
-  function persistCupo(){ save(KEY_CUPO, cupo); cloudWrite(); }
+  function persist(){ if(!demoMode) save(KEY, rows); cloudWrite(); }
+  function persistCupo(){ if(!demoMode) save(KEY_CUPO, cupo); cloudWrite(); }
+
+  // ---------- Modo DEMO (sin login, sin guardar) ----------
+  function startDemo(){
+    demoMode = true;
+    currentUser = null; userRef = null;
+    rows = []; cupo = null;
+    document.getElementById('demoBanner').style.display = "";
+    document.getElementById('userbar').style.display = "none";
+    document.getElementById('adminPanel').style.display = "none";
+    if(fCupo) fCupo.value = "";
+    showOnly(appWrap);
+    renderTrm(); render(); fetchTRM();
+  }
 
   // ---------- Autorización ----------
   function checkAuthorized(user){
@@ -725,9 +871,12 @@
       .then(snap => snap.exists() && !!snap.val());
   }
 
-  // ---------- Arranque de sesión ----------
+  // ---------- Arranque de sesión (usuario logueado y autorizado) ----------
   function startApp(user){
+    demoMode = false;
     currentUser = user;
+    document.getElementById('demoBanner').style.display = "none";
+    document.getElementById('userbar').style.display = "";
     document.getElementById('ubName').textContent = user.displayName || "Mi cuenta";
     document.getElementById('ubMail').textContent = user.email || "";
     if(user.photoURL) document.getElementById('ubAvatar').src = user.photoURL;
@@ -756,15 +905,15 @@
 
   if(auth){
     auth.onAuthStateChanged(user=>{
-      if(!user){ showOnly(gateLogin); return; }
+      if(demoMode) return; // si está probando, no lo saquamos
+      if(!user){ showOnly(gateWelcome); return; }
       showOnly(gateLoading);
-      document.getElementById('myEmail').textContent = user.email || "—";
       checkAuthorized(user).then(ok=>{
-        if(ok) startApp(user); else showOnly(gateDenied);
-      }).catch(err=>{ console.warn(err); showOnly(gateDenied); });
+        if(ok) startApp(user); else showActivate('login', user.email);
+      }).catch(err=>{ console.warn(err); showActivate('login', user.email); });
     });
   } else {
-    showOnly(gateLogin);
+    showOnly(gateWelcome);
   }
 
   // ---------- Panel de administración (solo admin) ----------
