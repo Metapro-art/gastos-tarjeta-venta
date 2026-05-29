@@ -1606,6 +1606,18 @@
   </div>
 </div>
 
+<!-- ===== Modal: posible gasto duplicado ===== -->
+<div class="modal-overlay" id="dupModal">
+  <div class="modal">
+    <h3>🤔 ¿Gasto repetido?</h3>
+    <div class="msub">Hace un momento ya registraste un gasto igual:</div>
+    <div id="dupDetail" style="background:rgba(224,179,87,.08);border:1px solid rgba(224,179,87,.28);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:14.5px;color:var(--text);line-height:1.5"></div>
+    <div class="msub" style="margin-bottom:18px">¿Seguro que quieres agregarlo otra vez?</div>
+    <button class="modal-close" id="dupConfirm" style="background:linear-gradient(180deg,var(--emerald),#4daf88)">Sí, agregar de todas formas</button>
+    <button id="dupCancel" style="width:100%;margin-top:10px;background:none;border:1px solid var(--line);color:var(--text-dim);border-radius:11px;padding:12px;font-weight:600;font-family:'Hanken Grotesk',sans-serif;font-size:14px;cursor:pointer">No, cancelar</button>
+  </div>
+</div>
+
 <!-- ===== Modal: instalar como app en el celular ===== -->
 <div class="modal-overlay" id="installModal">
   <div class="modal">
@@ -2536,34 +2548,75 @@
       }
       finishEdit();
       persist();
+      limpiarFormularioGasto();
+      render();
     } else {
-      // Nuevo gasto
-      const gid = "g_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
-      const gasto = { id: gid, desc, cat, subcat, usd, cop, trm:t, pago, markup, fecha };
-      if(vinculaTarjeta){
-        const cuotas = Math.max(1, parseInt(fCuotasGasto.value) || 1);
-        const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
-        gasto.linkId = linkId;
-        rows.push(gasto);
-        persist();
-        ccRows.push({ id:"cc_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, desc, usd, cop, trm:t, cuotas, markup, fecha });
-        persistCC(); renderCC();
-        const extra = aplicaRecargo ? " (con +0,50%)" : "";
-        showToast("💳 También se agregó a “Mi tarjeta de crédito”" + extra);
-      } else if(esAbono){
-        // El abono se registra también como pago en la tarjeta (vinculado)
-        const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
-        gasto.linkId = linkId;
-        rows.push(gasto);
-        persist();
-        ccPagos.push({ id:"pay_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, monto:cop, fecha, desc });
-        persistCC(); renderCC();
-        showToast("✅ También se registró como abono en tu tarjeta");
-      } else {
-        rows.push(gasto);
-        persist();
+      // Nuevo gasto: revisar si es un posible duplicado reciente antes de crearlo
+      const datos = { desc, cat, subcat, usd, cop, t, pago, markup, fecha, vinculaTarjeta, esAbono, aplicaRecargo };
+      const dup = buscarDuplicadoReciente(desc, cop, cat);
+      if(dup){
+        // Mostrar modal de confirmación; si el usuario acepta, se crea
+        pendienteGasto = datos;
+        const detalle = document.getElementById('dupDetail');
+        detalle.innerHTML = '<b>' + escapeHtml(desc) + '</b> · ' + fmtCOP.format(cop);
+        document.getElementById('dupModal').classList.add('show');
+        return; // esperamos la decisión del usuario
       }
+      commitNuevoGasto(datos);
+      limpiarFormularioGasto();
+      render();
     }
+  }
+
+  // Busca un gasto idéntico (misma descripción y valor, misma categoría) creado en los últimos minutos
+  function buscarDuplicadoReciente(desc, cop, cat){
+    const ahora = Date.now();
+    const VENTANA = 5 * 60 * 1000; // 5 minutos
+    const d = desc.trim().toLowerCase();
+    return rows.find(r=>{
+      if(!r.id || !r.id.startsWith("g_")) return false;
+      // extraer el timestamp del id (g_<timestamp>_<rand>)
+      const partes = r.id.split("_");
+      const ts = partes.length >= 2 ? parseInt(partes[1]) : 0;
+      if(!ts || (ahora - ts) > VENTANA) return false;
+      return (r.desc||"").trim().toLowerCase() === d
+          && Math.round(r.cop||0) === Math.round(cop)
+          && (r.cat||"") === cat;
+    });
+  }
+
+  let pendienteGasto = null; // gasto en espera de confirmación de duplicado
+
+  // Crea el gasto nuevo (y sus vínculos). Recibe los datos ya validados.
+  function commitNuevoGasto(d){
+    const gid = "g_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+    const gasto = { id: gid, desc:d.desc, cat:d.cat, subcat:d.subcat, usd:d.usd, cop:d.cop, trm:d.t, pago:d.pago, markup:d.markup, fecha:d.fecha };
+    if(d.vinculaTarjeta){
+      const cuotas = Math.max(1, parseInt(fCuotasGasto.value) || 1);
+      const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+      gasto.linkId = linkId;
+      rows.push(gasto);
+      persist();
+      ccRows.push({ id:"cc_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, desc:d.desc, usd:d.usd, cop:d.cop, trm:d.t, cuotas, markup:d.markup, fecha:d.fecha });
+      persistCC(); renderCC();
+      const extra = d.aplicaRecargo ? " (con +0,50%)" : "";
+      showToast("💳 Gasto agregado · también en “Mi tarjeta de crédito”" + extra);
+    } else if(d.esAbono){
+      const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+      gasto.linkId = linkId;
+      rows.push(gasto);
+      persist();
+      ccPagos.push({ id:"pay_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, monto:d.cop, fecha:d.fecha, desc:d.desc });
+      persistCC(); renderCC();
+      showToast("✅ Abono registrado · también en tu tarjeta");
+    } else {
+      rows.push(gasto);
+      persist();
+      showToast("✅ Gasto agregado");
+    }
+  }
+
+  function limpiarFormularioGasto(){
     fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
     fMarkupGasto.checked = false;
     fFecha.value = todayISO();
@@ -2571,8 +2624,22 @@
     fillSubcatSelect();
     lastEdited = 'cop';
     fDesc.focus();
-    render();
   }
+
+  // Lógica del modal de duplicado
+  (function(){
+    const modal = document.getElementById('dupModal');
+    if(!modal) return;
+    const close = ()=> modal.classList.remove('show');
+    document.getElementById('dupConfirm').addEventListener('click', ()=>{
+      close();
+      if(pendienteGasto){ commitNuevoGasto(pendienteGasto); pendienteGasto = null; limpiarFormularioGasto(); render(); }
+    });
+    document.getElementById('dupCancel').addEventListener('click', ()=>{
+      close(); pendienteGasto = null;
+    });
+    modal.addEventListener('click', (e)=>{ if(e.target === modal){ close(); pendienteGasto = null; } });
+  })();
 
   function startEdit(id){
     const r = rows.find(x => x.id === id);
