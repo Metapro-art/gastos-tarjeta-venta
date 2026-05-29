@@ -752,6 +752,12 @@
   .demo-price .dp-title{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; color:var(--text); margin-bottom:4px; }
   .demo-price .dp-title b{ font-family:'JetBrains Mono',monospace; color:var(--emerald); font-weight:600; }
   .demo-price .dp-sub{ font-size:13.5px; color:var(--text-dim); line-height:1.55; }
+  .demo-price .dp-login{ font-size:13px; color:var(--text-dim); margin-top:10px; }
+  .demo-price .dp-login button{
+    background:none; border:none; color:var(--emerald); font-weight:700; cursor:pointer;
+    font-family:inherit; font-size:13px; text-decoration:underline; padding:0;
+  }
+  .demo-price .dp-login button:hover{ filter:brightness(1.15); }
   .demo-price .dp-btn{
     flex:0 0 auto; background:linear-gradient(180deg, var(--emerald), #4daf88);
     color:#04140c; border:none; border-radius:11px; padding:13px 24px;
@@ -966,6 +972,7 @@
     <div class="dp-body">
       <div class="dp-title">Estás probando la app — actívala por <b>$15.000 COP</b>, pago único</div>
       <div class="dp-sub">En modo prueba nada se guarda. Al activarla (sin mensualidades), tus gastos quedan <b>guardados y sincronizados</b>: entra desde el celular o el computador y siempre tendrás todo ahí.</div>
+      <div class="dp-login">¿Ya tienes acceso? <button id="btnDemoLogin">Inicia sesión aquí</button></div>
     </div>
     <div class="dp-actions">
       <button class="dp-btn" id="btnDemoPriceBuy">Activar mi acceso</button>
@@ -1466,6 +1473,11 @@
   document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
   document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
   document.getElementById('btnDemoPriceBuy').addEventListener('click', ()=> showActivate('demo'));
+  document.getElementById('btnDemoLogin').addEventListener('click', ()=>{
+    demoMode = false;
+    document.getElementById('demoPrice').style.display = "none";
+    showOnly(gateLogin);
+  });
   document.getElementById('btnDemoExit').addEventListener('click', ()=>{
     demoMode = false;
     document.getElementById('demoPrice').style.display = "none";
