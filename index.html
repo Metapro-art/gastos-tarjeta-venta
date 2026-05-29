@@ -565,6 +565,7 @@
     margin-top:22px; flex-wrap:wrap; gap:14px;
   }
   .hint{ font-size:13px; color:var(--text-faint); max-width:55ch; }
+  .export-note{ font-size:12.5px; color:var(--text-faint); line-height:1.55; margin-top:14px; max-width:70ch; }
   .btn-reset{
     background:transparent; border:1px solid var(--line);
     color:var(--text-dim); border-radius:11px; padding:11px 20px;
@@ -757,9 +758,18 @@
     font-family:'Hanken Grotesk',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
   }
   .demo-price .dp-btn:hover{ filter:brightness(1.07); }
+  .demo-price .dp-actions{ display:flex; flex-direction:column; gap:8px; flex:0 0 auto; align-items:stretch; }
+  .demo-price .dp-link{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    border-radius:10px; padding:8px 14px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer; transition:all .16s;
+  }
+  .demo-price .dp-link:hover{ border-color:var(--text-dim); color:var(--text); }
   @media (max-width:560px){
-    .demo-price{ flex-direction:column; align-items:stretch; text-align:center; gap:12px; }
-    .demo-price .dp-btn{ width:100%; }
+    .demo-price{ flex-direction:column; align-items:stretch; text-align:center; gap:14px; }
+    .demo-price .dp-actions{ flex-direction:row; }
+    .demo-price .dp-btn{ flex:1 1 auto; }
+    .demo-price .dp-link{ flex:1 1 auto; }
     .demo-price .dp-icon{ display:none; }
   }
 
@@ -951,20 +961,17 @@
     </div>
   </header>
 
-  <div class="demo-banner" id="demoBanner" style="display:none">
-    <div class="dtext"><b>Estás en modo prueba.</b> <span>Explora la app libremente. Al cerrar esta página no se guarda nada. Actívala y tus gastos quedan guardados en tu cuenta, sincronizados y disponibles desde cualquier dispositivo: todos los que abran tu correo verán lo mismo, al instante.</span></div>
-    <button id="btnDemoBuy">¿Te gustó? Actívalo</button>
-    <button id="btnDemoInstall" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">📲 Instalar</button>
-    <button id="btnDemoExit" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">Salir</button>
-  </div>
-
   <div class="demo-price" id="demoPrice" style="display:none">
     <div class="dp-icon">💚</div>
     <div class="dp-body">
-      <div class="dp-title">Actívala por un <b>pago único de $15.000 COP</b></div>
-      <div class="dp-sub">Sin mensualidades ni cobros recurrentes. Al activarla, todos tus gastos quedan <b>guardados en tu cuenta</b> y <b>sincronizados</b>: entra desde el celular o el computador y siempre tendrás todo ahí, al instante.</div>
+      <div class="dp-title">Estás probando la app — actívala por <b>$15.000 COP</b>, pago único</div>
+      <div class="dp-sub">En modo prueba nada se guarda. Al activarla (sin mensualidades), tus gastos quedan <b>guardados y sincronizados</b>: entra desde el celular o el computador y siempre tendrás todo ahí.</div>
     </div>
-    <button class="dp-btn" id="btnDemoPriceBuy">Activar mi acceso</button>
+    <div class="dp-actions">
+      <button class="dp-btn" id="btnDemoPriceBuy">Activar mi acceso</button>
+      <button class="dp-link" id="btnDemoInstall">📲 Acceso directo</button>
+      <button class="dp-link" id="btnDemoExit">Salir</button>
+    </div>
   </div>
 
   <div class="userbar" id="userbar">
@@ -974,7 +981,7 @@
       <div class="umail" id="ubMail">—</div>
     </div>
     <span class="badge-admin" id="ubAdmin" style="display:none">ADMIN</span>
-    <button class="btn-install" id="btnInstall">📲 Instalar app</button>
+    <button class="btn-install" id="btnInstall">📲 Acceso directo</button>
     <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
   </div>
 
@@ -1229,13 +1236,14 @@
   </div><!-- /viewTarjeta -->
 
   <div class="actions">
-    <p class="hint">💾 Tus datos se guardan en tu cuenta y se sincronizan en todos tus dispositivos al iniciar sesión.</p>
+    <p class="hint">💾 Tus datos se guardan solos en tu cuenta y se sincronizan en todos tus dispositivos. Aquí puedes además descargar una copia.</p>
     <div class="action-btns">
-      <button class="btn-ghost" id="btnExport">⬇ Exportar respaldo</button>
-      <button class="btn-ghost" id="btnImport">⬆ Importar</button>
-      <button class="btn-reset" id="btnReset">↺ Resetear todo</button>
+      <button class="btn-ghost" id="btnExport">⬇ Exportar mis gastos</button>
+      <button class="btn-ghost" id="btnImport">⬆ Importar una copia</button>
+      <button class="btn-reset" id="btnReset">↺ Borrar todo</button>
       <input type="file" id="fileImport" accept="application/json,.json" style="display:none" />
     </div>
+    <p class="export-note">“Exportar mis gastos” descarga un archivo con toda tu información (gastos del mes, compras y pagos de tu tarjeta) para guardarlo en tu computador como copia de seguridad. Con “Importar” puedes volver a cargar esa copia cuando quieras.</p>
   </div>
 
 </div>
@@ -1258,8 +1266,8 @@
 <!-- ===== Modal: instalar como app en el celular ===== -->
 <div class="modal-overlay" id="installModal">
   <div class="modal">
-    <h3>📲 Instala la app en tu celular</h3>
-    <div class="msub">Agrégala a tu pantalla de inicio y ábrela como cualquier app, sin abrir el navegador.</div>
+    <h3>📲 Crea un acceso directo</h3>
+    <div class="msub">Agrega la app a tu pantalla de inicio y ábrela con un toque, como cualquier aplicación, sin entrar al navegador.</div>
     <div class="tabs">
       <button id="tabIos" class="active">iPhone</button>
       <button id="tabAndroid">Android</button>
@@ -1337,7 +1345,7 @@
 
   // ---------- Categorías de gasto ----------
   const CATEGORIAS = [
-    { id:"comida",     nombre:"Comida",          emoji:"🍔", color:"#e0796a" },
+    { id:"comida",     nombre:"Comida",          emoji:"🥗", color:"#e0796a" },
     { id:"transporte", nombre:"Transporte",      emoji:"🚗", color:"#e0b357" },
     { id:"hogar",      nombre:"Hogar y servicios",emoji:"🏠", color:"#5fc59b" },
     { id:"compras",    nombre:"Compras",         emoji:"🛍️", color:"#7aa2f7" },
@@ -1457,11 +1465,9 @@
   document.getElementById('btnTry').addEventListener('click', startDemo);
   document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
   document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
-  document.getElementById('btnDemoBuy').addEventListener('click', ()=> showActivate('demo'));
   document.getElementById('btnDemoPriceBuy').addEventListener('click', ()=> showActivate('demo'));
   document.getElementById('btnDemoExit').addEventListener('click', ()=>{
     demoMode = false;
-    document.getElementById('demoBanner').style.display = "none";
     document.getElementById('demoPrice').style.display = "none";
     showOnly(gateWelcome);
   });
@@ -1496,7 +1502,6 @@
     currentUser = null; userRef = null;
     rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
     ccRows = []; cupo = null; ccPagos = [];
-    document.getElementById('demoBanner').style.display = "";
     document.getElementById('demoPrice').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
@@ -1516,7 +1521,6 @@
   function startApp(user){
     demoMode = false;
     currentUser = user;
-    document.getElementById('demoBanner').style.display = "none";
     document.getElementById('demoPrice').style.display = "none";
     document.getElementById('userbar').style.display = "";
     document.getElementById('ubName').textContent = user.displayName || "Mi cuenta";
