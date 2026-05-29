@@ -1846,6 +1846,11 @@
     firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
     db   = firebase.database();
+    // Persistencia LOCAL: la sesión se guarda en el navegador y sobrevive a la redirección de Google
+    // (clave en Safari y Chrome móvil, donde si no, el login se pierde al volver)
+    if(auth && firebase.auth.Auth && firebase.auth.Auth.Persistence){
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=> console.warn("setPersistence:", e));
+    }
   } catch(e){ console.error("Firebase no inició:", e); }
 
   // Convierte un email en clave válida para la base de datos (sin . # $ [ ] /)
@@ -1914,39 +1919,34 @@
   });
 
   // ---------- Login / Logout ----------
-  // Detecta móvil o Safari, donde el popup falla con varias cuentas de Google abiertas
-  function prefiereRedireccion(){
-    const ua = navigator.userAgent || "";
-    const esMovil = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
-    const esSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
-    return esMovil || esSafari;
-  }
   function startGoogleLogin(statusEl){
     if(!auth){ if(statusEl) statusEl.textContent = "Error de configuración."; return; }
     if(statusEl) statusEl.textContent = "Abriendo Google…";
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    if(prefiereRedireccion()){
-      // Móvil / Safari: la página se va a Google y vuelve sola (funciona con varias cuentas abiertas)
-      auth.signInWithRedirect(provider).catch(err=>{
-        if(statusEl) statusEl.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
-        console.warn("Error redirect:", err);
-      });
-      return;
-    }
-    // Escritorio: popup (más rápido); si el navegador lo bloquea, caemos a redirección
-    auth.signInWithPopup(provider).catch(err=>{
+    // Usamos popup: devuelve el resultado directo en la misma página, sin depender de que la
+    // sesión sobreviva una recarga completa (más confiable con dominio propio fuera de Firebase Hosting).
+    auth.signInWithPopup(provider).then(result=>{
+      // onAuthStateChanged se encarga de entrar a la app
+      if(statusEl) statusEl.textContent = "";
+    }).catch(err=>{
       const code = err && err.code ? err.code : "";
-      if(code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request' || code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/popup-closed-by-user'){
+      console.warn("Error popup:", err);
+      // Si el navegador bloquea el popup por completo, intentamos redirección como último recurso
+      if(code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment'){
         if(statusEl) statusEl.textContent = "Redirigiendo a Google…";
         auth.signInWithRedirect(provider).catch(e2=>{
           if(statusEl) statusEl.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
           console.warn("Error redirect fallback:", e2);
         });
+      } else if(code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request'){
+        // El usuario cerró el popup: no mostramos error agresivo
+        if(statusEl) statusEl.textContent = "";
+      } else if(code === 'auth/unauthorized-domain'){
+        if(statusEl) statusEl.textContent = "Este dominio no está autorizado. Avísale al administrador.";
       } else {
         if(statusEl) statusEl.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
-        console.warn("Error popup:", err);
       }
     });
   }
@@ -2021,17 +2021,30 @@
   }
 
   if(auth){
+    // Mientras Firebase resuelve si hay sesión (o vuelta de redirección), mostramos "cargando"
+    let resolviendoLogin = true;
+    showOnly(gateLoading);
+
     // Al volver de una redirección de Google, capturamos el resultado (y posibles errores)
-    auth.getRedirectResult().catch(err=>{
+    auth.getRedirectResult().then(result=>{
+      // Si result.user existe, onAuthStateChanged se encargará de entrar. No hace falta más aquí.
+    }).catch(err=>{
       const code = err && err.code ? err.code : "";
       console.warn("getRedirectResult:", err);
-      // Errores típicos: dominio no autorizado, configuración, etc.
+      resolviendoLogin = false;
       if(code === 'auth/unauthorized-domain'){
-        try{ if(loginStatus) loginStatus.textContent = "Este dominio no está autorizado en Firebase."; }catch(e){}
+        showOnly(gateLogin);
+        try{ if(loginStatus) loginStatus.textContent = "Este dominio no está autorizado. Avísale al administrador."; }catch(e){}
+      } else {
+        // Otro error en la redirección: volvemos al login con un aviso
+        showOnly(gateLogin);
+        try{ if(loginStatus) loginStatus.textContent = "No se pudo completar el inicio de sesión. Intenta de nuevo."; }catch(e){}
       }
     });
+
     auth.onAuthStateChanged(user=>{
-      if(demoMode) return; // si está probando, no lo saquamos
+      resolviendoLogin = false;
+      if(demoMode) return; // si está probando, no lo sacamos
       if(!user){ showOnly(gateWelcome); return; }
       showOnly(gateLoading);
       checkAuthorized(user).then(ok=>{
