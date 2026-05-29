@@ -709,6 +709,15 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* ---------- Botón "Ver más" ---------- */
+  .ver-mas-wrap{ text-align:center; padding:16px 0 4px; }
+  .btn-vermas{
+    background:var(--ink); border:1px solid var(--line); color:var(--text-dim);
+    border-radius:10px; padding:11px 24px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:14px; font-weight:600; cursor:pointer; transition:all .16s;
+  }
+  .btn-vermas:hover{ border-color:var(--gold-soft); color:var(--gold); }
+
   /* ---------- Pestañas de navegación (Gastos / Tarjeta) ---------- */
   .nav-tabs{
     display:flex; gap:8px; margin-bottom:26px;
@@ -924,6 +933,9 @@
       <button id="btnAuthAdd">Autorizar</button>
     </div>
     <div class="auth-list" id="authList"></div>
+    <div class="ver-mas-wrap" id="verTodosWrap" style="display:none; padding-top:12px">
+      <button class="btn-vermas" id="btnVerTodos">Ver todos los clientes</button>
+    </div>
   </section>
 
   <nav class="nav-tabs">
@@ -1035,6 +1047,9 @@
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot"></tfoot>
       </table>
+    </div>
+    <div class="ver-mas-wrap" id="verMasGastos" style="display:none">
+      <button class="btn-vermas" id="btnVerMasGastos">Ver más</button>
     </div>
   </div>
 
@@ -1151,6 +1166,9 @@
           <tfoot id="ccTfoot"></tfoot>
         </table>
       </div>
+      <div class="ver-mas-wrap" id="verMasCc" style="display:none">
+        <button class="btn-vermas" id="btnVerMasCc">Ver más</button>
+      </div>
     </div>
 
   </div><!-- /viewTarjeta -->
@@ -1169,6 +1187,18 @@
 
 <!-- Toast (aviso flotante) -->
 <div class="toast" id="toast"></div>
+
+<!-- ===== Modal: todos los clientes (admin) ===== -->
+<div class="modal-overlay" id="clientsModal">
+  <div class="modal">
+    <h3>👥 Clientes autorizados</h3>
+    <div class="msub" id="clientsCount">—</div>
+    <input type="text" id="clientsSearch" placeholder="🔍 Buscar correo…" autocomplete="off"
+      style="width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Hanken Grotesk',sans-serif;font-size:14px;margin-bottom:14px" />
+    <div class="auth-list" id="clientsListFull" style="max-height:50vh;overflow-y:auto"></div>
+    <button class="modal-close" id="closeClients" style="margin-top:16px">Cerrar</button>
+  </div>
+</div>
 
 <!-- ===== Modal: instalar como app en el celular ===== -->
 <div class="modal-overlay" id="installModal">
@@ -1470,27 +1500,77 @@
 
   // ---------- Panel de administración (solo admin) ----------
   let adminInited = false;
+  let allClients = [];   // [{key, email}] todos los autorizados
+
+  function renderClientItem(c){
+    return '<div class="auth-item"><span class="em">'+escapeHtml(c.email)+'</span>'+
+           '<button data-k="'+escapeHtml(c.key)+'">Quitar</button></div>';
+  }
+  function wireRemoveButtons(container){
+    container.querySelectorAll('button[data-k]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(confirm("¿Quitar el acceso a este cliente?")) db.ref('authorized/'+b.dataset.k).remove();
+      });
+    });
+  }
+  function renderClientsFull(filter){
+    const listEl = document.getElementById('clientsListFull');
+    const f = (filter||"").trim().toLowerCase();
+    const arr = f ? allClients.filter(c => c.email.toLowerCase().includes(f)) : allClients;
+    if(!arr.length){
+      listEl.innerHTML = '<div class="auth-empty">'+(f ? "Ningún correo coincide." : "Aún no has autorizado a nadie.")+'</div>';
+      return;
+    }
+    listEl.innerHTML = arr.map(renderClientItem).join('');
+    wireRemoveButtons(listEl);
+  }
+
   function initAdmin(){
     if(adminInited) return; adminInited = true;
     const listEl = document.getElementById('authList');
+    const verTodos = document.getElementById('verTodosWrap');
     authListRef = db.ref('authorized');
     authListRef.on('value', snap=>{
       const data = snap.val() || {};
-      const entries = Object.entries(data).filter(([k,v])=> v);
-      if(!entries.length){ listEl.innerHTML = '<div class="auth-empty">Aún no has autorizado a nadie.</div>'; return; }
-      listEl.innerHTML = entries.map(([k,v])=>{
-        const email = (typeof v === 'string') ? v : k.replace(/,/g,'.');
-        return '<div class="auth-item"><span class="em">'+escapeHtml(email)+'</span>'+
-               '<button data-k="'+escapeHtml(k)+'">Quitar</button></div>';
-      }).join('');
-      listEl.querySelectorAll('button[data-k]').forEach(b=>{
-        b.addEventListener('click', ()=>{
-          if(confirm("¿Quitar el acceso a este cliente?")) db.ref('authorized/'+b.dataset.k).remove();
-        });
-      });
+      allClients = Object.entries(data).filter(([k,v])=> v).map(([k,v])=>({
+        key: k, email: (typeof v === 'string') ? v : k.replace(/,/g,'.')
+      }));
+
+      if(!allClients.length){
+        listEl.innerHTML = '<div class="auth-empty">Aún no has autorizado a nadie.</div>';
+        verTodos.style.display = "none";
+      } else {
+        // Solo los 3 más recientes en el panel (los últimos agregados van al final → tomamos del final)
+        const recientes = allClients.slice(-3).reverse();
+        listEl.innerHTML = recientes.map(renderClientItem).join('');
+        wireRemoveButtons(listEl);
+        // Botón "Ver todos" solo si hay más de 3
+        if(allClients.length > 3){
+          verTodos.style.display = "";
+          document.getElementById('btnVerTodos').textContent = "Ver todos (" + allClients.length + ")";
+        } else { verTodos.style.display = "none"; }
+      }
+      // Si el modal está abierto, refrescar su lista también
+      const cm = document.getElementById('clientsModal');
+      if(cm.classList.contains('show')){
+        document.getElementById('clientsCount').textContent = allClients.length + (allClients.length===1?" cliente autorizado":" clientes autorizados");
+        renderClientsFull(document.getElementById('clientsSearch').value);
+      }
     });
     document.getElementById('btnAuthAdd').addEventListener('click', addAuthorized);
     document.getElementById('adminEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') addAuthorized(); });
+
+    // Modal "Ver todos"
+    const cm = document.getElementById('clientsModal');
+    document.getElementById('btnVerTodos').addEventListener('click', ()=>{
+      document.getElementById('clientsCount').textContent = allClients.length + (allClients.length===1?" cliente autorizado":" clientes autorizados");
+      document.getElementById('clientsSearch').value = "";
+      renderClientsFull("");
+      cm.classList.add('show');
+    });
+    document.getElementById('closeClients').addEventListener('click', ()=> cm.classList.remove('show'));
+    cm.addEventListener('click', e=>{ if(e.target === cm) cm.classList.remove('show'); });
+    document.getElementById('clientsSearch').addEventListener('input', (e)=> renderClientsFull(e.target.value));
   }
   function addAuthorized(){
     const inp = document.getElementById('adminEmail');
@@ -1591,6 +1671,8 @@
 
   let editingId = null;
   let lastEdited = 'cop'; // por defecto la gente escribe en pesos
+  const PAGE = 10;            // registros visibles antes de "Ver más"
+  let visibleRows = PAGE;     // cuántos gastos se muestran ahora
 
   // Llena el desplegable de categorías
   fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+c.emoji+' '+c.nombre+'</option>').join('');
@@ -1884,7 +1966,8 @@
     } else {
       // Más recientes primero
       const ordered = rows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
-      tbody.innerHTML = ordered.map(r=>{
+      const shown = ordered.slice(0, visibleRows);
+      tbody.innerHTML = shown.map(r=>{
         const c = catById(r.cat);
         const pagoLbl = r.pago === 'credito' ? '💳 Crédito' : r.pago === 'debito' ? '💳 Débito' : r.pago === 'efectivo' ? '💵 Efectivo' : '';
         const mk = (r.markup && r.markup > 0) ? ' <span style="color:var(--gold);font-size:11px">+0,5%</span>' : '';
@@ -1902,6 +1985,14 @@
           </div></td>
         </tr>`;
       }).join("");
+
+      // Botón "Ver más"
+      const vm = document.getElementById('verMasGastos');
+      if(ordered.length > visibleRows){
+        vm.style.display = "";
+        const faltan = ordered.length - visibleRows;
+        document.getElementById('btnVerMasGastos').textContent = "Ver más (" + faltan + " más)";
+      } else { vm.style.display = "none"; }
 
       const totCop = rows.reduce((s,r)=> s + (r.cop||0), 0);
       const totUsd = rows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
@@ -2026,6 +2117,7 @@
   const CC_MARKUP = 0.5; // recargo opcional en compras en dólares
   let ccEditingId = null;
   let ccLast = 'cop';   // último campo escrito
+  let visibleCcRows = PAGE;  // cuántas compras de tarjeta se muestran ahora
 
   ccFecha.value = todayISO();
 
@@ -2194,7 +2286,8 @@
       ccTfoot.innerHTML = "";
     } else {
       const ordered = ccRows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
-      ccTbody.innerHTML = ordered.map(r=>{
+      const shown = ordered.slice(0, visibleCcRows);
+      ccTbody.innerHTML = shown.map(r=>{
         const cuotaVal = r.cop / (r.cuotas || 1);
         const mk = (r.markup && r.markup > 0) ? ' <span style="color:var(--gold);font-size:11px">+0,5%</span>' : '';
         return `<tr>
@@ -2214,6 +2307,14 @@
           </div></td>
         </tr>`;
       }).join("");
+
+      // Botón "Ver más"
+      const vm = document.getElementById('verMasCc');
+      if(ordered.length > visibleCcRows){
+        vm.style.display = "";
+        const faltan = ordered.length - visibleCcRows;
+        document.getElementById('btnVerMasCc').textContent = "Ver más (" + faltan + " más)";
+      } else { vm.style.display = "none"; }
 
       const totCop = ccRows.reduce((s,r)=> s + (r.cop||0), 0);
       const totUsd = ccRows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
@@ -2305,6 +2406,10 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(()=> el.classList.remove('show'), 3000);
   }
+
+  // Botones "Ver más"
+  document.getElementById('btnVerMasGastos').addEventListener('click', ()=>{ visibleRows += PAGE; render(); });
+  document.getElementById('btnVerMasCc').addEventListener('click', ()=>{ visibleCcRows += PAGE; renderCC(); });
 
   // El arranque ahora lo controla la sesión (onAuthStateChanged → startApp).
 </script>
