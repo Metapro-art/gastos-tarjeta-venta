@@ -710,7 +710,7 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   /* ---------- Botón "Ver más" ---------- */
-  .ver-mas-wrap{ text-align:center; padding:16px 0 4px; }
+  .ver-mas-wrap{ text-align:center; padding:16px 0 4px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
   .btn-vermas{
     background:var(--ink); border:1px solid var(--line); color:var(--text-dim);
     border-radius:10px; padding:11px 24px; font-family:'Hanken Grotesk',sans-serif;
@@ -1050,6 +1050,7 @@
     </div>
     <div class="ver-mas-wrap" id="verMasGastos" style="display:none">
       <button class="btn-vermas" id="btnVerMasGastos">Ver más</button>
+      <button class="btn-vermas" id="btnVerMenosGastos" style="display:none">Ver menos</button>
     </div>
   </div>
 
@@ -1168,6 +1169,7 @@
       </div>
       <div class="ver-mas-wrap" id="verMasCc" style="display:none">
         <button class="btn-vermas" id="btnVerMasCc">Ver más</button>
+        <button class="btn-vermas" id="btnVerMenosCc" style="display:none">Ver menos</button>
       </div>
     </div>
 
@@ -1986,12 +1988,17 @@
         </tr>`;
       }).join("");
 
-      // Botón "Ver más"
+      // Botones "Ver más" / "Ver menos"
       const vm = document.getElementById('verMasGastos');
-      if(ordered.length > visibleRows){
+      const bMas = document.getElementById('btnVerMasGastos');
+      const bMenos = document.getElementById('btnVerMenosGastos');
+      const hayMas = ordered.length > visibleRows;
+      const expandido = visibleRows > PAGE;   // se cargó más de la primera tanda
+      if(hayMas || expandido){
         vm.style.display = "";
-        const faltan = ordered.length - visibleRows;
-        document.getElementById('btnVerMasGastos').textContent = "Ver más (" + faltan + " más)";
+        if(hayMas){ bMas.style.display = ""; bMas.textContent = "Ver más (" + (ordered.length - visibleRows) + " más)"; }
+        else bMas.style.display = "none";
+        bMenos.style.display = expandido ? "" : "none";
       } else { vm.style.display = "none"; }
 
       const totCop = rows.reduce((s,r)=> s + (r.cop||0), 0);
@@ -2308,12 +2315,17 @@
         </tr>`;
       }).join("");
 
-      // Botón "Ver más"
+      // Botones "Ver más" / "Ver menos"
       const vm = document.getElementById('verMasCc');
-      if(ordered.length > visibleCcRows){
+      const bMas = document.getElementById('btnVerMasCc');
+      const bMenos = document.getElementById('btnVerMenosCc');
+      const hayMas = ordered.length > visibleCcRows;
+      const expandido = visibleCcRows > PAGE;
+      if(hayMas || expandido){
         vm.style.display = "";
-        const faltan = ordered.length - visibleCcRows;
-        document.getElementById('btnVerMasCc').textContent = "Ver más (" + faltan + " más)";
+        if(hayMas){ bMas.style.display = ""; bMas.textContent = "Ver más (" + (ordered.length - visibleCcRows) + " más)"; }
+        else bMas.style.display = "none";
+        bMenos.style.display = expandido ? "" : "none";
       } else { vm.style.display = "none"; }
 
       const totCop = ccRows.reduce((s,r)=> s + (r.cop||0), 0);
@@ -2410,6 +2422,15 @@
   // Botones "Ver más"
   document.getElementById('btnVerMasGastos').addEventListener('click', ()=>{ visibleRows += PAGE; render(); });
   document.getElementById('btnVerMasCc').addEventListener('click', ()=>{ visibleCcRows += PAGE; renderCC(); });
+  // Botones "Ver menos" (colapsan a 10 y suben a la tabla)
+  document.getElementById('btnVerMenosGastos').addEventListener('click', ()=>{
+    visibleRows = PAGE; render();
+    document.querySelector('#viewGastos .table-card').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+  document.getElementById('btnVerMenosCc').addEventListener('click', ()=>{
+    visibleCcRows = PAGE; renderCC();
+    document.querySelector('#viewTarjeta .table-card').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
 
   // El arranque ahora lo controla la sesión (onAuthStateChanged → startApp).
 </script>
