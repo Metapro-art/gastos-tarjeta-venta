@@ -365,6 +365,9 @@
   .btn-google:hover{ filter:brightness(.97); transform:translateY(-1px); }
   .btn-google svg{ width:20px; height:20px; }
   .gate-foot{ margin-top:22px; font-size:13px; color:var(--text-dim); line-height:1.6; }
+  .privacy-link{ color:var(--gold); text-decoration:underline; cursor:pointer; font-weight:600; }
+  .privacy-link:hover{ filter:brightness(1.15); }
+  .disclaimer .privacy-link{ color:var(--gold); }
   .gate-status{ margin-top:16px; font-size:13px; color:var(--text-dim); min-height:18px; }
 
   .denied .ico{ font-size:42px; margin-bottom:8px; }
@@ -810,6 +813,16 @@
 
   /* ----- Modal Mis categorías ----- */
   .cats-modal{ max-width:560px; }
+  /* Modal de política de privacidad */
+  .privacy-modal{ max-width:580px; }
+  .privacy-body{ max-height:54vh; overflow-y:auto; margin-bottom:18px; padding-right:6px; }
+  .privacy-body p{ font-size:13.5px; color:var(--text-dim); line-height:1.6; margin:0 0 14px; }
+  .privacy-body p b{ color:var(--text); }
+  .privacy-body h4{
+    font-family:'Hanken Grotesk',sans-serif; font-size:14.5px; font-weight:700;
+    color:var(--gold); margin:18px 0 7px;
+  }
+  .privacy-body h4:first-of-type{ margin-top:4px; }
   .cats-list{ display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
   .cat-item{
     background:var(--ink); border:1px solid var(--line-soft); border-radius:14px;
@@ -1073,7 +1086,7 @@
       <div class="login-divider"><span>¿Ya tienes una cuenta?</span></div>
       <button class="btn-have" id="btnHave">Iniciar sesión</button>
     </div>
-    <div class="gate-foot">Pruébala sin registrarte, sin compromiso. Explora todo y mira si te sirve.</div>
+    <div class="gate-foot">Pruébala sin registrarte, sin compromiso. Explora todo y mira si te sirve.<br><a href="#" class="privacy-link">Política de privacidad</a></div>
   </div>
 </div>
 
@@ -1110,7 +1123,7 @@
     </a>
     <div class="gate-status" id="deniedActions"></div>
     <div class="refer-tip">🎁 <b>Tip:</b> una vez actives tu acceso, ganas <b>$5.000</b> de vuelta en tu cuenta por cada persona confirmada que invites y se suscriba. ¡Tu acceso se puede pagar solo: refiere y gana! <button class="refer-more" id="referMoreActivate">Ver cómo funciona</button></div>
-    <div class="disclaimer">El pago es único: no se cobran mensualidades ni cargos recurrentes. El acceso se mantiene mientras el servicio esté disponible. Como toda herramienta digital, la aplicación podría modificarse o descontinuarse en el futuro; al activar tu acceso aceptas esta condición.</div>
+    <div class="disclaimer">El pago es único: no se cobran mensualidades ni cargos recurrentes. El acceso se mantiene mientras el servicio esté disponible. Como toda herramienta digital, la aplicación podría modificarse o descontinuarse en el futuro; al activar tu acceso aceptas esta condición. Al activar tu acceso también aceptas nuestra <a href="#" class="privacy-link">política de privacidad</a>.</div>
   </div>
 </div>
 
@@ -1484,6 +1497,42 @@
   </div>
 </div>
 
+<!-- ===== Modal: Política de privacidad ===== -->
+<div class="modal-overlay" id="privacyModal">
+  <div class="modal privacy-modal">
+    <h3>🔒 Política de privacidad y tratamiento de datos</h3>
+    <div class="msub">Última actualización: mayo de 2026</div>
+    <div class="privacy-body">
+      <p>Esta aplicación (“Control de Gastos”) respeta tu privacidad. Aquí te explicamos, de forma clara, qué datos guardamos, para qué y cuáles son tus derechos, conforme a la Ley 1581 de 2012 de Colombia sobre protección de datos personales.</p>
+
+      <h4>1. Qué datos guardamos</h4>
+      <p>Cuando usas la app con tu cuenta, guardamos únicamente: tu correo electrónico de Google (para identificarte e iniciar sesión) y la información que tú mismo registras dentro de la app: tus gastos, ingresos, objetivos de ahorro, compras y pagos de tarjeta, y las categorías que crees. No pedimos ni almacenamos contraseñas, números de tarjetas reales, ni datos bancarios.</p>
+
+      <h4>2. Para qué usamos tus datos</h4>
+      <p>Tus datos se usan con un único fin: que la aplicación funcione y puedas ver tu información sincronizada desde cualquier dispositivo donde inicies sesión. <b>No usamos tu información para ningún otro propósito.</b></p>
+
+      <h4>3. No vendemos ni compartimos tu información</h4>
+      <p>Tus datos <b>no se venden, no se alquilan ni se comparten</b> con terceros, anunciantes ni empresas de mercadeo. No mostramos publicidad basada en tu información. Tu información es tuya.</p>
+
+      <h4>4. Dónde se guardan</h4>
+      <p>Tus datos se almacenan de forma segura en los servidores de Google (Firebase), una plataforma reconocida que cumple estándares internacionales de seguridad. La conexión está cifrada. Solo tú, al iniciar sesión con tu correo, puedes ver tu propia información.</p>
+
+      <h4>5. Tus derechos</h4>
+      <p>En cualquier momento puedes solicitar conocer, actualizar, corregir o <b>eliminar</b> los datos que tenemos sobre ti. Si pides que se eliminen, borraremos tu información de nuestra base de datos. Para ejercer cualquiera de estos derechos, escríbenos al correo de contacto que aparece abajo.</p>
+
+      <h4>6. Conservación</h4>
+      <p>Conservamos tu información mientras tu cuenta esté activa. Si solicitas eliminarla, o si el servicio se descontinúa, tus datos serán borrados.</p>
+
+      <h4>7. Contacto</h4>
+      <p>El responsable del tratamiento de los datos atenderá tus solicitudes en: <b><span id="privacyEmail">juandavid00@gmail.com</span></b></p>
+
+      <h4>8. Aceptación</h4>
+      <p>Al activar tu acceso e iniciar sesión, aceptas esta política de privacidad y autorizas el tratamiento de tus datos en los términos aquí descritos.</p>
+    </div>
+    <button class="modal-close" id="closePrivacy">Entendido</button>
+  </div>
+</div>
+
 <!-- ===== Modal: Mis categorías (personalización) ===== -->
 <div class="modal-overlay" id="catsModal">
   <div class="modal cats-modal">
@@ -1623,6 +1672,18 @@
       const b = document.getElementById(id);
       if(b) b.addEventListener('click', open);
     });
+  })();
+
+  // ====== Modal: Política de privacidad ======
+  (function(){
+    const modal = document.getElementById('privacyModal');
+    if(!modal) return;
+    const open = (e)=>{ if(e) e.preventDefault(); modal.classList.add('show'); };
+    const close = ()=> modal.classList.remove('show');
+    document.getElementById('closePrivacy').addEventListener('click', close);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
+    // Cualquier enlace con clase .privacy-link abre la política
+    document.querySelectorAll('.privacy-link').forEach(el=> el.addEventListener('click', open));
   })();
 
   // ====== Modal: Mis categorías (personalización) ======
@@ -1837,6 +1898,7 @@
   // 👇 Datos de pago/contacto que verá el cliente
   const PAY_BREB    = "@arango3803";         // tu llave BreB para recibir pagos
   const WHATSAPP    = "573152003303";        // tu WhatsApp con código de país (57 = Colombia)
+  const PRIVACY_EMAIL = "juandavid00@gmail.com";  // 👈 correo de contacto para temas de datos/privacidad
   const PRECIO      = "$20.000 COP";         // valor del acceso (pago único)
   // ======================================================================
 
@@ -1873,6 +1935,7 @@
 
   // ---------- Pantalla "Activa tu acceso": rellenar datos y link de WhatsApp ----------
   document.getElementById('payBreb').textContent = PAY_BREB;
+  (function(){ const pe = document.getElementById('privacyEmail'); if(pe) pe.textContent = PRIVACY_EMAIL; })();
   document.querySelector('.price-pill').innerHTML = PRECIO + ' <small>· pago único</small>';
 
   function buildWhatsappLink(email){
