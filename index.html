@@ -1013,7 +1013,11 @@
       <button class="btn-add" id="btnAdd">Agregar</button>
     </div>
     <div class="rate-line" id="rateLine">💱 Se convierte automáticamente con la TRM del día: <b id="rateInfo">—</b></div>
-    <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Al pagar con tarjeta de crédito, este gasto también se guardará en tu sección <b>“Mi tarjeta de crédito”</b>.</div>
+    <label class="markup-check" id="gastoMarkupWrap" style="display:none">
+      <input type="checkbox" id="fMarkupGasto" />
+      <span>Sumar <b>+0,50%</b> por compra en dólares <span class="hint-mk">(recargo al pagar en moneda extranjera; solo afecta la conversión USD → COP)</span></span>
+    </label>
+    <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Este gasto también se guardará en <b>“Mi tarjeta de crédito”</b> y quedará vinculado: si lo editas o borras aquí, también cambia allá.</div>
   </section>
 
   <div class="table-card">
@@ -1573,6 +1577,8 @@
   const fPago      = document.getElementById('fPago');
   const fCuotasGasto = document.getElementById('fCuotasGasto');
   const fieldCuotasGasto = document.getElementById('fieldCuotasGasto');
+  const fMarkupGasto = document.getElementById('fMarkupGasto');
+  const gastoMarkupWrap = document.getElementById('gastoMarkupWrap');
   const creditoNote = document.getElementById('creditoNote');
   const rateLine   = document.getElementById('rateLine');
   const rateInfo   = document.getElementById('rateInfo');
@@ -1594,6 +1600,10 @@
     const esCredito = fPago.value === 'credito';
     fieldCuotasGasto.style.display = esCredito ? "" : "none";
     creditoNote.style.display = esCredito ? "" : "none";
+    gastoMarkupWrap.style.display = esCredito ? "" : "none";
+    if(!esCredito) fMarkupGasto.checked = false;
+    updateRateLine();
+    if(lastEdited === 'usd') recalc('usd');
   }
   fPago.addEventListener('change', toggleCreditoUI);
 
@@ -1635,24 +1645,29 @@
     persistBudget(); render();
   });
 
-  // ---------- Conversión COP <-> USD con la TRM del día (sin recargo) ----------
+  // ---------- Conversión COP <-> USD con la TRM del día ----------
+  // El recargo +0,50% se aplica solo si: pagó con crédito Y marcó la casilla.
+  function recargoActivo(){ return fPago.value === 'credito' && fMarkupGasto.checked; }
   function updateRateLine(){
     if(!trm.value){ rateInfo.textContent = "TRM no disponible — usa “editar” en la tarjeta de arriba"; return; }
-    rateInfo.textContent = "1 USD = " + fmtNum.format(trm.value) + " COP";
+    if(recargoActivo()) rateInfo.textContent = "1 USD = " + fmtNum.format(trm.value*1.005) + " COP (con +0,50%)";
+    else rateInfo.textContent = "1 USD = " + fmtNum.format(trm.value) + " COP";
   }
   function recalc(source){
     const t = trm.value || 0;
     if(!t) return;
+    const effUsd = recargoActivo() ? t * 1.005 : t;  // recargo solo afecta USD→COP si la casilla está marcada
     if(source === 'usd'){
       const u = parseFloat(fUsd.value);
-      fCop.value = (!isNaN(u) && u > 0) ? Math.round(u * t) : '';
+      fCop.value = (!isNaN(u) && u > 0) ? Math.round(u * effUsd) : '';
     } else {
       const c = parseFloat(fCop.value);
-      fUsd.value = (!isNaN(c) && c > 0) ? (c / t).toFixed(2) : '';
+      fUsd.value = (!isNaN(c) && c > 0) ? (c / t).toFixed(2) : '';  // COP→USD siempre TRM pura
     }
   }
   fUsd.addEventListener('input', ()=>{ lastEdited = 'usd'; recalc('usd'); });
   fCop.addEventListener('input', ()=>{ lastEdited = 'cop'; recalc('cop'); });
+  fMarkupGasto.addEventListener('change', ()=>{ updateRateLine(); if(lastEdited === 'usd') recalc('usd'); });
 
   // ---------- Agregar / editar gasto ----------
   function addRow(){
@@ -1663,11 +1678,15 @@
     if(!desc){ fDesc.focus(); return; }
     if(!t || t <= 0){ alert("No hay TRM disponible. Usa “editar” en la tarjeta de la TRM, arriba."); return; }
 
+    const aplicaRecargo = recargoActivo();   // crédito + casilla marcada
+    const tasaEff = aplicaRecargo ? t * 1.005 : t;
+    const markup = aplicaRecargo ? 0.5 : 0;
+
     let usd, cop;
     if(lastEdited === 'usd'){
       usd = parseFloat(fUsd.value);
       if(isNaN(usd) || usd <= 0){ fUsd.focus(); return; }
-      cop = usd * t;
+      cop = usd * tasaEff;
     } else {
       cop = parseFloat(fCop.value);
       if(isNaN(cop) || cop <= 0){ fCop.focus(); return; }
@@ -1676,30 +1695,52 @@
     const fecha = fFecha.value || todayISO();
 
     if(editingId){
+      // Editar gasto existente
       const idx = rows.findIndex(x => x.id === editingId);
-      if(idx >= 0) rows[idx] = { ...rows[idx], desc, cat, usd, cop, trm:t, pago, fecha };
+      if(idx >= 0){
+        const prev = rows[idx];
+        rows[idx] = { ...prev, desc, cat, usd, cop, trm:t, pago, markup, fecha };
+        // Si está vinculado a una compra de tarjeta, actualiza el compañero (sin tocar sus cuotas)
+        if(prev.linkId){
+          const j = ccRows.findIndex(x => x.linkId === prev.linkId);
+          if(j >= 0) ccRows[j] = { ...ccRows[j], desc, usd, cop, trm:t, markup, fecha };
+          // Si el gasto dejó de ser crédito, se rompe el vínculo y se borra la compra de tarjeta
+          if(pago !== 'credito'){
+            if(j >= 0) ccRows.splice(j,1);
+            delete rows[idx].linkId;
+          }
+          persistCC(); renderCC();
+        } else if(pago === 'credito'){
+          // El gasto pasó a ser crédito al editar: crear su compra de tarjeta vinculada
+          const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+          rows[idx].linkId = linkId;
+          ccRows.push({ id:"cc_"+Date.now(), linkId, desc, usd, cop, trm:t, cuotas:1, markup, fecha });
+          persistCC(); renderCC();
+        }
+      }
       finishEdit();
       persist();
     } else {
-      rows.push({
-        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-        desc, cat, usd, cop, trm:t, pago, fecha
-      });
-      persist();
-      // Si se pagó con tarjeta de crédito, copiar a "Mi tarjeta" (registro independiente)
+      // Nuevo gasto
+      const gid = Date.now() + "_" + Math.random().toString(36).slice(2,7);
+      const gasto = { id: gid, desc, cat, usd, cop, trm:t, pago, markup, fecha };
       if(pago === 'credito'){
         const cuotas = Math.max(1, parseInt(fCuotasGasto.value) || 1);
-        ccRows.push({
-          id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-          desc, usd, cop, trm:t, cuotas, markup:0,
-          fecha
-        });
-        persistCC();
-        renderCC();
-        showToast("💳 También se agregó a “Mi tarjeta de crédito”");
+        const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+        gasto.linkId = linkId;
+        rows.push(gasto);
+        persist();
+        ccRows.push({ id:"cc_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, desc, usd, cop, trm:t, cuotas, markup, fecha });
+        persistCC(); renderCC();
+        const extra = aplicaRecargo ? " (con +0,50%)" : "";
+        showToast("💳 También se agregó a “Mi tarjeta de crédito”" + extra);
+      } else {
+        rows.push(gasto);
+        persist();
       }
     }
     fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
+    fMarkupGasto.checked = false;
     fFecha.value = todayISO();
     fPago.value = "efectivo"; toggleCreditoUI();
     lastEdited = 'cop';
@@ -1716,7 +1757,10 @@
     fFecha.value = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
     fCop.value = Math.round(r.cop);
     fUsd.value = (r.usd != null ? r.usd : (r.trm ? r.cop / r.trm : 0)).toFixed(2);
-    fPago.value = r.pago || "efectivo"; toggleCreditoUI();
+    fPago.value = r.pago || "efectivo";
+    toggleCreditoUI();
+    fMarkupGasto.checked = !!(r.markup && r.markup > 0);
+    toggleCreditoUI();
     lastEdited = 'cop';
     btnAdd.textContent = 'Guardar cambios';
     editBanner.style.display = '';
@@ -1731,6 +1775,7 @@
   function cancelEdit(){
     finishEdit();
     fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
+    fMarkupGasto.checked = false;
     fFecha.value = todayISO();
     fPago.value = "efectivo"; toggleCreditoUI();
     lastEdited = 'cop';
@@ -1738,8 +1783,16 @@
   document.getElementById('btnCancel').addEventListener('click', cancelEdit);
 
   function delRow(id){
+    const r = rows.find(x => x.id === id);
+    if(!r) return;
+    // Si está vinculado a una compra de tarjeta, avisar
+    if(r.linkId && ccRows.some(x => x.linkId === r.linkId)){
+      if(!confirm("Este gasto está vinculado a una compra en “Mi tarjeta de crédito”. Si lo borras, también se borrará allá. ¿Continuar?")) return;
+      ccRows = ccRows.filter(x => x.linkId !== r.linkId);
+      persistCC(); renderCC();
+    }
     if(id === editingId) cancelEdit();
-    rows = rows.filter(r => r.id !== id);
+    rows = rows.filter(x => x.id !== id);
     persist();
     render();
   }
@@ -1834,13 +1887,14 @@
       tbody.innerHTML = ordered.map(r=>{
         const c = catById(r.cat);
         const pagoLbl = r.pago === 'credito' ? '💳 Crédito' : r.pago === 'debito' ? '💳 Débito' : r.pago === 'efectivo' ? '💵 Efectivo' : '';
+        const mk = (r.markup && r.markup > 0) ? ' <span style="color:var(--gold);font-size:11px">+0,5%</span>' : '';
         return `<tr>
           <td>
             <div class="desc">${escapeHtml(r.desc)}</div>
             <div class="date">${fmtFecha(r.fecha)}${pagoLbl ? ' · ' + pagoLbl : ''}</div>
           </td>
           <td><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span></td>
-          <td class="r mono cop">${fmtCOP.format(r.cop)}</td>
+          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}</td>
           <td class="r mono usd">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
           <td class="c"><div class="row-actions">
             <button class="edit" title="Editar" data-id="${r.id}">✎</button>
@@ -2060,7 +2114,15 @@
 
     if(ccEditingId){
       const idx = ccRows.findIndex(x => x.id === ccEditingId);
-      if(idx >= 0) ccRows[idx] = { ...ccRows[idx], desc, usd, cop, trm:t, cuotas, markup, fecha: ccFecha.value || todayISO() };
+      if(idx >= 0){
+        const prev = ccRows[idx];
+        ccRows[idx] = { ...prev, desc, usd, cop, trm:t, cuotas, markup, fecha: ccFecha.value || todayISO() };
+        // Si está vinculada a un gasto, refleja los cambios allá (cuotas NO van a gastos)
+        if(prev.linkId){
+          const j = rows.findIndex(x => x.linkId === prev.linkId);
+          if(j >= 0){ rows[j] = { ...rows[j], desc, usd, cop, trm:t, markup, fecha: ccFecha.value || todayISO() }; persist(); render(); }
+        }
+      }
       ccFinishEdit();
     } else {
       ccRows.push({
@@ -2100,8 +2162,16 @@
   document.getElementById('ccBtnCancel').addEventListener('click', ccCancelEdit);
 
   function ccDelRow(id){
+    const r = ccRows.find(x => x.id === id);
+    if(!r) return;
+    // Si está vinculada a un gasto del mes, avisar
+    if(r.linkId && rows.some(x => x.linkId === r.linkId)){
+      if(!confirm("Esta compra está vinculada a un gasto en “Gastos del mes”. Si la borras, también se borrará allá. ¿Continuar?")) return;
+      rows = rows.filter(x => x.linkId !== r.linkId);
+      persist(); render();
+    }
     if(id === ccEditingId) ccCancelEdit();
-    ccRows = ccRows.filter(r => r.id !== id);
+    ccRows = ccRows.filter(x => x.id !== id);
     persistCC(); renderCC();
   }
 
