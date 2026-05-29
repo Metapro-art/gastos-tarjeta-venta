@@ -445,6 +445,12 @@
   }
   .btn-wa:hover{ filter:brightness(1.04); transform:translateY(-1px); }
   .btn-wa svg{ width:20px; height:20px; }
+  .refer-tip{
+    background:rgba(224,179,87,.10); border:1px solid rgba(224,179,87,.28);
+    border-radius:12px; padding:13px 15px; margin-top:16px;
+    font-size:13px; color:var(--text); line-height:1.55; text-align:left;
+  }
+  .refer-tip b{ color:var(--gold); }
   .disclaimer{
     font-size:12px; color:var(--text-dim); line-height:1.6;
     margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft);
@@ -972,6 +978,7 @@
       Escríbeme por WhatsApp
     </a>
     <div class="gate-status" id="deniedActions"></div>
+    <div class="refer-tip">🎁 <b>Tip:</b> una vez actives tu acceso, puedes ganar <b>$5.000</b> por cada amigo que invites. ¡Tu acceso se puede pagar solo!</div>
     <div class="disclaimer">El pago es único: no se cobran mensualidades ni cargos recurrentes. El acceso se mantiene mientras el servicio esté disponible. Como toda herramienta digital, la aplicación podría modificarse o descontinuarse en el futuro; al activar tu acceso aceptas esta condición.</div>
   </div>
 </div>
@@ -1018,6 +1025,7 @@
       <div class="umail" id="ubMail">—</div>
     </div>
     <span class="badge-admin" id="ubAdmin" style="display:none">ADMIN</span>
+    <button class="btn-install" id="btnRefer">🎁 Refiere y gana</button>
     <button class="btn-install" id="btnInstall">📲 Acceso directo</button>
     <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
   </div>
@@ -1292,16 +1300,6 @@
 
   </div><!-- /viewTarjeta -->
 
-  <section class="referral" id="referralBox">
-    <h3>🎁 Gana <span class="ref-amount">$5.000</span> por cada amigo</h3>
-    <p>Invita a tus amigos a usar Control de Gastos. Por cada persona que active su acceso gracias a tu recomendación, te devolvemos <b>$5.000 COP</b> a tu Nequi. ¡Sin límite de amigos!</p>
-    <ol>
-      <li>Cuéntale a tu amigo sobre la app y pásale el enlace.</li>
-      <li>Cuando él vaya a activar su acceso, que <b>mencione por WhatsApp tu correo y tu número de Nequi</b>.</li>
-      <li>Apenas confirmemos su pago, te reembolsamos tus <b>$5.000</b>. 🎉</li>
-    </ol>
-  </section>
-
   <div class="actions">
     <p class="hint">💾 Tus datos se guardan solos en tu cuenta y se sincronizan en todos tus dispositivos. Aquí puedes además descargar una copia.</p>
     <div class="action-btns">
@@ -1327,6 +1325,29 @@
       style="width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Hanken Grotesk',sans-serif;font-size:14px;margin-bottom:14px" />
     <div class="auth-list" id="clientsListFull" style="max-height:50vh;overflow-y:auto"></div>
     <button class="modal-close" id="closeClients" style="margin-top:16px">Cerrar</button>
+  </div>
+</div>
+
+<!-- ===== Modal: referidos (Refiere y gana) ===== -->
+<div class="modal-overlay" id="referralModal">
+  <div class="modal">
+    <h3>🎁 Refiere y gana <span style="font-family:'JetBrains Mono',monospace;color:var(--gold)">$5.000</span></h3>
+    <div class="msub">Por cada amigo que active su acceso gracias a ti, te devolvemos <b>$5.000 COP</b> a tu Nequi. ¡Sin límite!</div>
+    <div style="background:rgba(224,179,87,.08);border:1px solid rgba(224,179,87,.25);border-radius:12px;padding:16px;margin-bottom:6px">
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;font-size:14px;color:var(--text);line-height:1.5">
+        <span style="flex:0 0 24px;height:24px;border-radius:50%;background:rgba(224,179,87,.18);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace">1</span>
+        <div>Cuéntale a tu amigo sobre la app y pásale el enlace.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;font-size:14px;color:var(--text);line-height:1.5">
+        <span style="flex:0 0 24px;height:24px;border-radius:50%;background:rgba(224,179,87,.18);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace">2</span>
+        <div>Cuando él active su acceso, que <b style="color:var(--gold)">mencione por WhatsApp tu correo y tu número de Nequi</b>.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text);line-height:1.5">
+        <span style="flex:0 0 24px;height:24px;border-radius:50%;background:rgba(224,179,87,.18);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace">3</span>
+        <div>Apenas confirmemos su pago, te reembolsamos tus <b style="color:var(--gold)">$5.000</b>. 🎉</div>
+      </div>
+    </div>
+    <button class="modal-close" id="closeReferral">Entendido</button>
   </div>
 </div>
 
@@ -1422,6 +1443,17 @@
       const b = document.getElementById(id);
       if(b) b.addEventListener('click', open);
     });
+  })();
+
+  // ====== Modal de referidos ======
+  (function(){
+    const modal = document.getElementById('referralModal');
+    const open = ()=> modal.classList.add('show');
+    const close = ()=> modal.classList.remove('show');
+    document.getElementById('closeReferral').addEventListener('click', close);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
+    const b = document.getElementById('btnRefer');
+    if(b) b.addEventListener('click', open);
   })();
 
   // ---------- Categorías de gasto ----------
