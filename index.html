@@ -567,6 +567,19 @@
   .hint{ font-size:13px; color:var(--text-faint); max-width:55ch; }
   .export-note{ font-size:12.5px; color:var(--text-faint); line-height:1.55; margin-top:14px; max-width:70ch; }
 
+  /* ---------- Sección de referidos ---------- */
+  .referral{
+    background:linear-gradient(135deg, rgba(224,179,87,.12), rgba(224,179,87,.03));
+    border:1px solid rgba(224,179,87,.3); border-radius:16px;
+    padding:22px; margin-bottom:24px;
+  }
+  .referral h3{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .referral .ref-amount{ color:var(--gold); font-family:'JetBrains Mono',monospace; }
+  .referral p{ font-size:13.5px; color:var(--text-dim); line-height:1.6; margin-bottom:14px; }
+  .referral ol{ margin:0 0 4px; padding-left:20px; }
+  .referral li{ font-size:13.5px; color:var(--text); line-height:1.6; margin-bottom:7px; }
+  .referral li b{ color:var(--gold); }
+
   /* ---------- Barra de ordenamiento de tablas ---------- */
   .sort-bar{
     display:flex; align-items:center; justify-content:flex-end; gap:9px;
@@ -917,7 +930,7 @@
     <ul class="gate-feats">
       <li><b>Conversión dólar–peso</b> con la TRM oficial del Banco de la República, actualizada al instante.</li>
       <li><b>Define tu objetivo de gasto</b> y mira cuánto puedes ahorrar cada mes en tiempo real.</li>
-      <li><b>Tus datos te siguen:</b> entra desde el celular o el computador y todo está ahí.</li>
+      <li><b>Disponible donde estés:</b> inicia sesión con tu correo desde cualquier dispositivo y tu información estará sincronizada al instante.</li>
     </ul>
     <div class="gate-actions">
       <button class="btn-try" id="btnTry">Probar gratis</button>
@@ -949,7 +962,7 @@
     <div class="eyebrow">Activa tu acceso</div>
     <h1>Activa tu <em>acceso</em></h1>
     <p id="deniedText">Para usar la app con tus datos guardados, actívala con un pago único. Te habilitamos en minutos.</p>
-    <div class="price-pill">$15.000 COP <small>· pago único</small></div>
+    <div class="price-pill">$20.000 COP <small>· pago único</small></div>
     <div class="pay-box">
       <div class="row"><span class="lbl">Pago Nequi</span><span class="val" id="payNequi">—</span></div>
       <div class="row" id="myEmailRow" style="display:none"><span class="lbl">Tu correo</span><span class="val email-mine" id="myEmail">—</span></div>
@@ -987,8 +1000,8 @@
   <div class="demo-price" id="demoPrice" style="display:none">
     <div class="dp-icon">💚</div>
     <div class="dp-body">
-      <div class="dp-title">Estás probando la app — actívala por <b>$15.000 COP</b>, pago único</div>
-      <div class="dp-sub">En modo prueba nada se guarda. Al activarla (sin mensualidades), tus gastos quedan <b>guardados y sincronizados</b>: entra desde el celular o el computador y siempre tendrás todo ahí.</div>
+      <div class="dp-title">Estás probando la app — actívala por <b>$20.000 COP</b>, pago único</div>
+      <div class="dp-sub">En modo prueba nada se guarda. Al activarla (pago único, sin mensualidades), inicias sesión con tu Gmail y <b>toda tu información queda sincronizada</b>: ábrela desde cualquier dispositivo con tu correo y siempre la tendrás ahí, al instante.</div>
       <div class="dp-login">¿Ya tienes acceso? <button id="btnDemoLogin">Inicia sesión aquí</button></div>
     </div>
     <div class="dp-actions">
@@ -1279,6 +1292,16 @@
 
   </div><!-- /viewTarjeta -->
 
+  <section class="referral" id="referralBox">
+    <h3>🎁 Gana <span class="ref-amount">$5.000</span> por cada amigo</h3>
+    <p>Invita a tus amigos a usar Control de Gastos. Por cada persona que active su acceso gracias a tu recomendación, te devolvemos <b>$5.000 COP</b> a tu Nequi. ¡Sin límite de amigos!</p>
+    <ol>
+      <li>Cuéntale a tu amigo sobre la app y pásale el enlace.</li>
+      <li>Cuando él vaya a activar su acceso, que <b>mencione por WhatsApp tu correo y tu número de Nequi</b>.</li>
+      <li>Apenas confirmemos su pago, te reembolsamos tus <b>$5.000</b>. 🎉</li>
+    </ol>
+  </section>
+
   <div class="actions">
     <p class="hint">💾 Tus datos se guardan solos en tu cuenta y se sincronizan en todos tus dispositivos. Aquí puedes además descargar una copia.</p>
     <div class="action-btns">
@@ -1304,6 +1327,20 @@
       style="width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Hanken Grotesk',sans-serif;font-size:14px;margin-bottom:14px" />
     <div class="auth-list" id="clientsListFull" style="max-height:50vh;overflow-y:auto"></div>
     <button class="modal-close" id="closeClients" style="margin-top:16px">Cerrar</button>
+  </div>
+</div>
+
+<!-- ===== Modal: confirmar borrado total (reforzado) ===== -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <h3 style="color:var(--rose)">⚠️ ¡Cuidado! Vas a borrar todo</h3>
+    <div class="msub">Esto eliminará <b>permanentemente</b> todos tus gastos del mes, las compras y los pagos de tu tarjeta. <b>No se puede deshacer.</b></div>
+    <div style="background:rgba(95,197,155,.10);border:1px solid rgba(95,197,155,.3);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:13.5px;color:var(--text);line-height:1.5">
+      💡 <b>Consejo:</b> antes de borrar, exporta una copia de tus datos. Así podrás recuperarlos si los necesitas más adelante.
+    </div>
+    <button class="modal-close" id="resetExportFirst" style="background:linear-gradient(180deg,var(--emerald),#4daf88)">⬇ Mejor exporto primero</button>
+    <button id="resetConfirm" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--rose);color:var(--rose);border-radius:11px;padding:13px;font-weight:700;font-family:'Hanken Grotesk',sans-serif;font-size:14px;cursor:pointer">Sí, borrar todo de todas formas</button>
+    <button id="resetCancel" style="width:100%;margin-top:10px;background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Cancelar</button>
   </div>
 </div>
 
@@ -1397,6 +1434,7 @@
     { id:"ocio",       nombre:"Ocio y diversión",emoji:"🎉", color:"#f7768e" },
     { id:"educacion",  nombre:"Educación",       emoji:"📚", color:"#7dcfff" },
     { id:"tarjeta",    nombre:"Tarjeta de crédito", emoji:"💳", color:"#c9a04a" },
+    { id:"abono",      nombre:"Abono tarjeta de crédito", emoji:"✅", color:"#5fc59b" },
     { id:"otros",      nombre:"Otros",           emoji:"📦", color:"#9aa0ad" }
   ];
   const catById = (id) => CATEGORIAS.find(c => c.id === id) || CATEGORIAS[CATEGORIAS.length-1];
@@ -1447,7 +1485,7 @@
   // 👇 Datos de pago/contacto que verá el cliente
   const PAY_NEQUI   = "315 200 3303";        // tu número de Nequi
   const WHATSAPP    = "573152003303";        // tu WhatsApp con código de país (57 = Colombia)
-  const PRECIO      = "$15.000 COP";         // valor del acceso (pago único)
+  const PRECIO      = "$20.000 COP";         // valor del acceso (pago único)
   // ======================================================================
 
   let db = null, auth = null, currentUser = null, userRef = null, authListRef = null;
@@ -1482,7 +1520,8 @@
 
   function buildWhatsappLink(email){
     const msg = "Hola, quiero activar mi acceso a Control de Gastos. Ya realicé el pago de " + PRECIO +
-                " por Nequi (adjunto captura). Mi correo de Google es: " + (email || "");
+                " por Nequi (adjunto captura). Mi correo de Google es: " + (email || "") +
+                "\n\n¿Te refirió alguien? Si es así, escribe aquí el correo y número de Nequi de quien te recomendó la app (para darle su recompensa): ";
     return "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
   }
   // Muestra la pantalla de activación. origin = 'demo' o 'login'
@@ -1498,7 +1537,7 @@
       acts.innerHTML = '<button class="btn-logout" id="btnLogoutDenied" style="margin-top:8px">Cerrar sesión</button>';
       document.getElementById('btnLogoutDenied').addEventListener('click', doLogout);
     } else {
-      txt.textContent = "Al activar tu acceso, todo lo que registres queda guardado en tu cuenta y disponible desde cualquier dispositivo: entras con tu correo desde el celular o el computador y tus gastos están ahí, siempre. Realiza el pago y escríbeme por WhatsApp; te habilito en minutos.";
+      txt.textContent = "Una vez actives tu acceso, inicia sesión con tu Gmail y toda la información que registres quedará sincronizada entre cualquier dispositivo con el que ingreses con tu correo: tu celular, tu tablet, tu computador. Realiza el pago y escríbeme por WhatsApp; te habilito en minutos.";
       myRow.style.display = "none";
       acts.innerHTML = '<button class="gate-back" id="btnBackDemo">← Volver a la prueba</button>';
       document.getElementById('btnBackDemo').addEventListener('click', ()=> showOnly(appWrap));
@@ -1889,6 +1928,8 @@
     const aplicaRecargo = recargoActivo();   // crédito + casilla marcada
     const tasaEff = aplicaRecargo ? t * 1.005 : t;
     const markup = aplicaRecargo ? 0.5 : 0;
+    // El abono de tarjeta NUNCA se copia a la tarjeta (es un pago, no una compra)
+    const vinculaTarjeta = (pago === 'credito' && cat !== 'abono');
 
     let usd, cop;
     if(lastEdited === 'usd'){
@@ -1901,38 +1942,43 @@
       usd = cop / t;
     }
     const fecha = fFecha.value || todayISO();
+    const esAbono = (cat === 'abono');   // abono de tarjeta → va a los pagos de la tarjeta
 
     if(editingId){
       // Editar gasto existente
       const idx = rows.findIndex(x => x.id === editingId);
       if(idx >= 0){
         const prev = rows[idx];
-        rows[idx] = { ...prev, desc, cat, usd, cop, trm:t, pago, markup, fecha };
-        // Si está vinculado a una compra de tarjeta, actualiza el compañero (sin tocar sus cuotas)
+        // Primero, limpiar cualquier vínculo viejo que tuviera
         if(prev.linkId){
-          const j = ccRows.findIndex(x => x.linkId === prev.linkId);
-          if(j >= 0) ccRows[j] = { ...ccRows[j], desc, usd, cop, trm:t, markup, fecha };
-          // Si el gasto dejó de ser crédito, se rompe el vínculo y se borra la compra de tarjeta
-          if(pago !== 'credito'){
-            if(j >= 0) ccRows.splice(j,1);
-            delete rows[idx].linkId;
-          }
-          persistCC(); renderCC();
-        } else if(pago === 'credito'){
-          // El gasto pasó a ser crédito al editar: crear su compra de tarjeta vinculada
+          const jc = ccRows.findIndex(x => x.linkId === prev.linkId);
+          if(jc >= 0) { if(vinculaTarjeta) ccRows[jc] = { ...ccRows[jc], desc, usd, cop, trm:t, markup, fecha }; else ccRows.splice(jc,1); }
+          const jp = ccPagos.findIndex(x => x.linkId === prev.linkId);
+          if(jp >= 0) { if(esAbono) ccPagos[jp] = { ...ccPagos[jp], monto:cop, fecha }; else ccPagos.splice(jp,1); }
+        }
+        rows[idx] = { ...prev, desc, cat, usd, cop, trm:t, pago, markup, fecha };
+        // Si no tenía vínculo y ahora corresponde uno, crearlo
+        if(!prev.linkId && vinculaTarjeta){
           const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
           rows[idx].linkId = linkId;
           ccRows.push({ id:"cc_"+Date.now(), linkId, desc, usd, cop, trm:t, cuotas:1, markup, fecha });
-          persistCC(); renderCC();
+        } else if(!prev.linkId && esAbono){
+          const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+          rows[idx].linkId = linkId;
+          ccPagos.push({ id:"pay_"+Date.now(), linkId, monto:cop, fecha });
+        } else if(prev.linkId && !vinculaTarjeta && !esAbono){
+          // dejó de estar vinculado
+          delete rows[idx].linkId;
         }
+        persistCC(); renderCC();
       }
       finishEdit();
       persist();
     } else {
       // Nuevo gasto
-      const gid = Date.now() + "_" + Math.random().toString(36).slice(2,7);
+      const gid = "g_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
       const gasto = { id: gid, desc, cat, usd, cop, trm:t, pago, markup, fecha };
-      if(pago === 'credito'){
+      if(vinculaTarjeta){
         const cuotas = Math.max(1, parseInt(fCuotasGasto.value) || 1);
         const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
         gasto.linkId = linkId;
@@ -1942,6 +1988,15 @@
         persistCC(); renderCC();
         const extra = aplicaRecargo ? " (con +0,50%)" : "";
         showToast("💳 También se agregó a “Mi tarjeta de crédito”" + extra);
+      } else if(esAbono){
+        // El abono se registra también como pago en la tarjeta (vinculado)
+        const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+        gasto.linkId = linkId;
+        rows.push(gasto);
+        persist();
+        ccPagos.push({ id:"pay_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), linkId, monto:cop, fecha });
+        persistCC(); renderCC();
+        showToast("✅ También se registró como abono en tu tarjeta");
       } else {
         rows.push(gasto);
         persist();
@@ -1999,6 +2054,12 @@
       ccRows = ccRows.filter(x => x.linkId !== r.linkId);
       persistCC(); renderCC();
     }
+    // Si es un abono vinculado a un pago de la tarjeta, también lo quitamos de allá
+    else if(r.linkId && ccPagos.some(x => x.linkId === r.linkId)){
+      if(!confirm("Este abono está registrado también en los pagos de “Mi tarjeta de crédito”. Si lo borras, se quitará de allá. ¿Continuar?")) return;
+      ccPagos = ccPagos.filter(x => x.linkId !== r.linkId);
+      persistCC(); renderCC();
+    }
     if(id === editingId) cancelEdit();
     rows = rows.filter(x => x.id !== id);
     persist();
@@ -2011,12 +2072,28 @@
   });
 
   // ---------- Reset ----------
+  // ---------- Reset con ventana de confirmación reforzada ----------
+  const resetModal = document.getElementById('resetModal');
+  function doReset(){
+    rows = []; ccRows = []; ccPagos = [];
+    persist(); persistCC();
+    render(); renderCC();
+    resetModal.classList.remove('show');
+    showToast("Se borraron todos los datos");
+  }
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    if((rows.length === 0 && ccRows.length === 0) || confirm("¿Seguro que quieres borrar TODO (gastos del mes, compras y pagos de tarjeta)? Esta acción no se puede deshacer.")){
-      rows = []; ccRows = []; ccPagos = [];
-      persist(); persistCC();
-      render(); renderCC();
+    if(rows.length === 0 && ccRows.length === 0 && ccPagos.length === 0){
+      showToast("No hay nada que borrar todavía");
+      return;
     }
+    resetModal.classList.add('show');
+  });
+  document.getElementById('resetConfirm').addEventListener('click', doReset);
+  document.getElementById('resetCancel').addEventListener('click', ()=> resetModal.classList.remove('show'));
+  resetModal.addEventListener('click', (e)=>{ if(e.target === resetModal) resetModal.classList.remove('show'); });
+  document.getElementById('resetExportFirst').addEventListener('click', ()=>{
+    resetModal.classList.remove('show');
+    document.getElementById('btnExport').click();   // dispara la exportación
   });
 
   // ---------- Exportar / Importar respaldo ----------
@@ -2271,19 +2348,35 @@
   function ccAddPago(){
     const monto = parseFloat(ccPagoMonto.value);
     if(isNaN(monto) || monto <= 0){ ccPagoMonto.focus(); return; }
+    const fecha = ccPagoFecha.value || todayISO();
+    const t = trm.value || 0;
+    const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
     ccPagos.push({
-      id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-      monto,
-      fecha: ccPagoFecha.value || todayISO()
+      id: "pay_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      linkId, monto, fecha
     });
-    persistCC();
+    // Se registra también como abono en "Gastos del mes" (vinculado)
+    rows.push({
+      id: "g_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      linkId, desc: "Abono tarjeta de crédito", cat: "abono",
+      cop: monto, usd: (t ? monto/t : 0), trm: t, pago: "credito", markup: 0, fecha
+    });
+    persistCC(); persist();
     ccPagoMonto.value = "";
     ccPagoFecha.value = todayISO();
-    renderCC();
-    showToast("💚 Pago registrado");
+    renderCC(); render();
+    showToast("💚 Pago registrado · también en “Gastos del mes”");
   }
   function ccDelPago(id){
-    ccPagos = ccPagos.filter(p => p.id !== id);
+    const p = ccPagos.find(x => x.id === id);
+    if(!p) return;
+    // Si este pago vino de un abono registrado en gastos, avisar y borrar también allá
+    if(p.linkId && rows.some(x => x.linkId === p.linkId)){
+      if(!confirm("Este pago está vinculado a un abono en “Gastos del mes”. Si lo borras, se quitará de allá también. ¿Continuar?")) return;
+      rows = rows.filter(x => x.linkId !== p.linkId);
+      persist(); render();
+    }
+    ccPagos = ccPagos.filter(x => x.id !== id);
     persistCC(); renderCC();
   }
   document.getElementById('ccPagoAdd').addEventListener('click', ccAddPago);
