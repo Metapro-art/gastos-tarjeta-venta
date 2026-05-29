@@ -1296,6 +1296,7 @@
         <select id="fPago" class="num">
           <option value="efectivo">💵 Efectivo</option>
           <option value="debito">💳 Débito</option>
+          <option value="transferencia">🔄 Transferencia</option>
           <option value="credito">💳 Tarjeta de crédito</option>
         </select>
       </div>
@@ -2865,7 +2866,7 @@
     L.push(["Fecha","Descripción","Categoría","Pagado con","COP","USD","TRM"].map(csvCampo).join(sep));
     rows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).forEach(r=>{
       const c = catById(r.cat);
-      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='efectivo'?'Efectivo':'';
+      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='transferencia'?'Transferencia':r.pago==='efectivo'?'Efectivo':'';
       L.push([r.fecha, r.desc, c.nombre, pago, Math.round(r.cop), (r.usd!=null?r.usd.toFixed(2):''), (r.trm||'')].map(csvCampo).join(sep));
     });
     const totCop = rows.reduce((s,r)=>s+(r.cop||0),0);
@@ -2898,7 +2899,7 @@
     const fmtU = (n)=> "US$" + (n!=null? n.toFixed(2): "0.00");
     const filasG = rows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(r=>{
       const c = catById(r.cat);
-      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='efectivo'?'Efectivo':'';
+      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='transferencia'?'Transferencia':r.pago==='efectivo'?'Efectivo':'';
       return `<tr><td>${fmtFecha(r.fecha)}</td><td>${escapeHtml(r.desc)}</td><td>${escapeHtml(catLabel(c))}</td><td>${pago}</td><td class="r">${fmtP(r.cop)}</td><td class="r">${fmtU(r.usd)}</td></tr>`;
     }).join("");
     const totCop = rows.reduce((s,r)=>s+(r.cop||0),0);
@@ -3019,7 +3020,7 @@
       const shown = ordered.slice(0, visibleRows);
       tbody.innerHTML = shown.map(r=>{
         const c = catById(r.cat);
-        const pagoLbl = r.pago === 'credito' ? '💳 Crédito' : r.pago === 'debito' ? '💳 Débito' : r.pago === 'efectivo' ? '💵 Efectivo' : '';
+        const pagoLbl = r.pago === 'credito' ? '💳 Crédito' : r.pago === 'debito' ? '💳 Débito' : r.pago === 'transferencia' ? '🔄 Transferencia' : r.pago === 'efectivo' ? '💵 Efectivo' : '';
         const mk = (r.markup && r.markup > 0) ? ' <span style="color:var(--gold);font-size:11px">+0,5%</span>' : '';
         const subTxt = r.subcat ? escapeHtml(r.subcat) : '';
         const subPill = subTxt ? ` <span class="subcat-tag">${subTxt}</span>` : '';
