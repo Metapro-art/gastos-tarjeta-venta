@@ -531,13 +531,22 @@
     background:var(--ink); border:1px solid var(--line-soft); border-radius:10px;
     padding:10px 14px; font-size:14px;
   }
+  .auth-item .auth-info{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
   .auth-item .em{ word-break:break-all; }
+  .auth-item .auth-date{ font-size:11.5px; color:var(--text-faint); }
   .auth-item button{
     background:none; border:1px solid var(--line); color:var(--text-faint);
     border-radius:8px; padding:5px 12px; cursor:pointer; font-size:12px; font-weight:600;
-    transition:all .16s; white-space:nowrap;
+    transition:all .16s; white-space:nowrap; flex:0 0 auto;
   }
   .auth-item button:hover{ border-color:var(--rose); color:var(--rose); }
+  /* Selector de orden en el modal de clientes */
+  .clients-sort{ display:flex; align-items:center; justify-content:flex-end; gap:9px; margin-bottom:12px; }
+  .clients-sort label{ font-size:12.5px; color:var(--text-dim); }
+  .clients-sort select{
+    background:var(--ink); border:1px solid var(--line); color:var(--text);
+    border-radius:9px; padding:7px 11px; font-family:'Hanken Grotesk',sans-serif; font-size:13px; cursor:pointer;
+  }
   .auth-empty{ font-size:13px; color:var(--text-faint); padding:8px 2px; }
 
   .app-hidden{ display:none !important; }
@@ -1499,7 +1508,15 @@
     <h3>👥 Clientes autorizados</h3>
     <div class="msub" id="clientsCount">—</div>
     <input type="text" id="clientsSearch" placeholder="🔍 Buscar correo…" autocomplete="off"
-      style="width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Hanken Grotesk',sans-serif;font-size:14px;margin-bottom:14px" />
+      style="width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Hanken Grotesk',sans-serif;font-size:14px;margin-bottom:12px" />
+    <div class="clients-sort">
+      <label for="clientsSort">↕ Ordenar por</label>
+      <select id="clientsSort">
+        <option value="reciente">Más recientes</option>
+        <option value="antiguo">Más antiguos</option>
+        <option value="az">Correo (A–Z)</option>
+      </select>
+    </div>
     <div class="auth-list" id="clientsListFull" style="max-height:50vh;overflow-y:auto"></div>
     <button class="modal-close" id="closeClients" style="margin-top:16px">Cerrar</button>
   </div>
@@ -2129,10 +2146,18 @@
 
   // ---------- Panel de administración (solo admin) ----------
   let adminInited = false;
-  let allClients = [];   // [{key, email}] todos los autorizados
+  let allClients = [];   // [{key, email, ts}] todos los autorizados
 
+  function fmtFechaCorta(ts){
+    if(!ts) return "";
+    try{
+      const d = new Date(ts);
+      return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+    }catch(e){ return ""; }
+  }
   function renderClientItem(c){
-    return '<div class="auth-item"><span class="em">'+escapeHtml(c.email)+'</span>'+
+    const fecha = c.ts ? '<span class="auth-date">Autorizado: '+fmtFechaCorta(c.ts)+'</span>' : '<span class="auth-date">Autorizado antes</span>';
+    return '<div class="auth-item"><div class="auth-info"><span class="em">'+escapeHtml(c.email)+'</span>'+fecha+'</div>'+
            '<button data-k="'+escapeHtml(c.key)+'">Quitar</button></div>';
   }
   function wireRemoveButtons(container){
@@ -2145,7 +2170,13 @@
   function renderClientsFull(filter){
     const listEl = document.getElementById('clientsListFull');
     const f = (filter||"").trim().toLowerCase();
-    const arr = f ? allClients.filter(c => c.email.toLowerCase().includes(f)) : allClients;
+    let arr = f ? allClients.filter(c => c.email.toLowerCase().includes(f)) : allClients.slice();
+    // Ordenar según lo elegido en el selector del modal
+    const sortSel = document.getElementById('clientsSort');
+    const criterio = sortSel ? sortSel.value : 'reciente';
+    if(criterio === 'antiguo')      arr.sort((a,b)=> (a.ts||0) - (b.ts||0));
+    else if(criterio === 'az')      arr.sort((a,b)=> a.email.toLowerCase().localeCompare(b.email.toLowerCase()));
+    else                            arr.sort((a,b)=> (b.ts||0) - (a.ts||0)); // reciente (default)
     if(!arr.length){
       listEl.innerHTML = '<div class="auth-empty">'+(f ? "Ningún correo coincide." : "Aún no has autorizado a nadie.")+'</div>';
       return;
@@ -2161,16 +2192,22 @@
     authListRef = db.ref('authorized');
     authListRef.on('value', snap=>{
       const data = snap.val() || {};
-      allClients = Object.entries(data).filter(([k,v])=> v).map(([k,v])=>({
-        key: k, email: (typeof v === 'string') ? v : k.replace(/,/g,'.')
-      }));
+      allClients = Object.entries(data).filter(([k,v])=> v).map(([k,v])=>{
+        // Compatibilidad: los nuevos se guardan como {email, ts}; los viejos eran solo el correo (string)
+        const email = (typeof v === 'object' && v.email) ? v.email
+                     : (typeof v === 'string') ? v : k.replace(/,/g,'.');
+        const ts = (typeof v === 'object' && v.ts) ? v.ts : 0; // los viejos quedan como los más antiguos
+        return { key: k, email: email, ts: ts };
+      });
+      // Orden base: más recientes primero (por fecha de autorización)
+      allClients.sort((a,b)=> (b.ts||0) - (a.ts||0));
 
       if(!allClients.length){
         listEl.innerHTML = '<div class="auth-empty">Aún no has autorizado a nadie.</div>';
         verTodos.style.display = "none";
       } else {
-        // Solo los 3 más recientes en el panel (los últimos agregados van al final → tomamos del final)
-        const recientes = allClients.slice(-3).reverse();
+        // Los 3 más recientes en el panel
+        const recientes = allClients.slice(0, 3);
         listEl.innerHTML = recientes.map(renderClientItem).join('');
         wireRemoveButtons(listEl);
         // Botón "Ver todos" solo si hay más de 3
@@ -2200,12 +2237,14 @@
     document.getElementById('closeClients').addEventListener('click', ()=> cm.classList.remove('show'));
     cm.addEventListener('click', e=>{ if(e.target === cm) cm.classList.remove('show'); });
     document.getElementById('clientsSearch').addEventListener('input', (e)=> renderClientsFull(e.target.value));
+    document.getElementById('clientsSort').addEventListener('change', ()=> renderClientsFull(document.getElementById('clientsSearch').value));
   }
   function addAuthorized(){
     const inp = document.getElementById('adminEmail');
     const em = inp.value.trim().toLowerCase();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ alert("Escribe un correo válido."); return; }
-    db.ref('authorized/'+emailKey(em)).set(em).then(()=>{ inp.value=""; });
+    // Guardamos correo + fecha de autorización (para poder ordenar por más reciente)
+    db.ref('authorized/'+emailKey(em)).set({ email: em, ts: Date.now() }).then(()=>{ inp.value=""; });
   }
 
   // ---------- Formateadores ----------
