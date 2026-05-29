@@ -269,8 +269,13 @@
   .desc{ font-weight:500; }
   .date{ font-size:13px; color:var(--text-dim); margin-top:3px; }
   .mono{ font-family:'JetBrains Mono', monospace; font-weight:500; }
+  td.r.mono{ white-space:nowrap; }   /* los valores nunca se parten en dos líneas */
+  /* Categoría mostrada bajo la descripción (solo en pantallas muy pequeñas) */
+  .cat-inline{ display:none; font-size:12px; margin-top:4px; }
   .usd{ color:var(--gold); }
   .cop{ color:var(--text); }
+  /* USD como sub-línea bajo el COP: oculto en escritorio, visible en móvil */
+  .usd-sub{ display:none; color:var(--gold); font-weight:500; font-size:12.5px; margin-top:3px; }
   .trm-cell{ color:var(--text-dim); font-size:13px; }
   .cuota-pill{
     display:inline-block; background:rgba(95,197,155,.12); color:var(--emerald);
@@ -633,8 +638,16 @@
     .form-grid{ grid-template-columns:1fr; }
     .panel{ padding:18px; }
     .table-card{ border-radius:14px; }
-    /* La tabla mantiene scroll horizontal pero con menos padding */
-    tbody td, thead th{ padding:12px 12px; }
+    /* En móvil la tabla NO necesita scroll lateral: el USD va bajo el COP */
+    table{ min-width:0; }
+    .usd-col{ display:none; }       /* ocultar columna USD separada */
+    .usd-sub{ display:block; }      /* mostrar USD bajo el COP */
+    tbody td, thead th{ padding:12px 8px; font-size:13px; }
+    /* Acciones y categoría más compactas para que todo quepa sin scroll */
+    .row-actions{ gap:4px; flex-direction:column; }
+    .row-actions button{ width:30px; height:30px; }
+    .cat-pill{ font-size:11px; padding:3px 8px; }
+    td:first-child .desc{ font-size:13.5px; }
     .stat{ padding:16px 18px; }
     .userbar{ padding:10px 12px; }
     .userbar .btn-logout{ padding:8px 12px; font-size:12px; }
@@ -648,6 +661,14 @@
 
   /* La tabla siempre se puede deslizar de lado en móvil sin romper el layout */
   .table-scroll{ -webkit-overflow-scrolling:touch; }
+
+  /* Pantallas muy pequeñas (≤370px): liberar espacio ocultando la columna categoría */
+  @media (max-width:370px){
+    .cat-col{ display:none; }       /* ocultar columna de categoría */
+    .cat-inline{ display:block; }   /* mostrarla como sub-línea bajo la descripción */
+    tbody td, thead th{ padding:11px 6px; }
+    .row-actions button{ width:28px; height:28px; font-size:13px; }
+  }
 
   /* ---------- Modal de instalación (tutorial) ---------- */
   .modal-overlay{
@@ -700,11 +721,11 @@
 
   /* ---------- Toast (aviso flotante) ---------- */
   .toast{
-    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+    position:fixed; left:50%; bottom:20px; transform:translateX(-50%) translateY(20px);
     background:linear-gradient(180deg, var(--surface-2), var(--surface));
     border:1px solid var(--gold-soft); color:var(--text);
     border-radius:12px; padding:13px 20px; font-size:14px; font-weight:600;
-    box-shadow:var(--shadow); z-index:80; opacity:0; pointer-events:none;
+    box-shadow:var(--shadow); z-index:90; opacity:0; pointer-events:none;
     transition:opacity .25s, transform .25s; max-width:90vw; text-align:center;
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -717,6 +738,30 @@
     font-size:14px; font-weight:600; cursor:pointer; transition:all .16s;
   }
   .btn-vermas:hover{ border-color:var(--gold-soft); color:var(--gold); }
+
+  /* ---------- Recuadro de precio dentro del demo ---------- */
+  .demo-price{
+    background:linear-gradient(135deg, rgba(95,197,155,.12), rgba(95,197,155,.04));
+    border:1px solid rgba(95,197,155,.3); border-radius:16px;
+    padding:20px 22px; margin-bottom:24px; display:flex; align-items:center;
+    gap:18px; flex-wrap:wrap;
+  }
+  .demo-price .dp-icon{ font-size:32px; flex:0 0 auto; }
+  .demo-price .dp-body{ flex:1 1 260px; min-width:0; }
+  .demo-price .dp-title{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; color:var(--text); margin-bottom:4px; }
+  .demo-price .dp-title b{ font-family:'JetBrains Mono',monospace; color:var(--emerald); font-weight:600; }
+  .demo-price .dp-sub{ font-size:13.5px; color:var(--text-dim); line-height:1.55; }
+  .demo-price .dp-btn{
+    flex:0 0 auto; background:linear-gradient(180deg, var(--emerald), #4daf88);
+    color:#04140c; border:none; border-radius:11px; padding:13px 24px;
+    font-family:'Hanken Grotesk',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .demo-price .dp-btn:hover{ filter:brightness(1.07); }
+  @media (max-width:560px){
+    .demo-price{ flex-direction:column; align-items:stretch; text-align:center; gap:12px; }
+    .demo-price .dp-btn{ width:100%; }
+    .demo-price .dp-icon{ display:none; }
+  }
 
   /* ---------- Pestañas de navegación (Gastos / Tarjeta) ---------- */
   .nav-tabs{
@@ -843,10 +888,9 @@
     </ul>
     <div class="gate-actions">
       <button class="btn-try" id="btnTry">Probar gratis</button>
-      <div class="price-line">💚 Pago único de <b>$15.000 COP</b> · sin mensualidades ni cobros recurrentes</div>
       <button class="btn-have" id="btnHave">Ya tengo acceso</button>
     </div>
-    <div class="gate-foot">Pruébala sin registrarte. Si te gusta, actívala con un solo pago.<br><span style="font-size:11px;opacity:.8">Pago único, sin mensualidades. El acceso se mantiene mientras el servicio esté disponible.</span></div>
+    <div class="gate-foot">Pruébala sin registrarte, sin compromiso. Explora todo y mira si te sirve.</div>
   </div>
 </div>
 
@@ -912,6 +956,15 @@
     <button id="btnDemoBuy">¿Te gustó? Actívalo</button>
     <button id="btnDemoInstall" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">📲 Instalar</button>
     <button id="btnDemoExit" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">Salir</button>
+  </div>
+
+  <div class="demo-price" id="demoPrice" style="display:none">
+    <div class="dp-icon">💚</div>
+    <div class="dp-body">
+      <div class="dp-title">Actívala por un <b>pago único de $15.000 COP</b></div>
+      <div class="dp-sub">Sin mensualidades ni cobros recurrentes. Al activarla, todos tus gastos quedan <b>guardados en tu cuenta</b> y <b>sincronizados</b>: entra desde el celular o el computador y siempre tendrás todo ahí, al instante.</div>
+    </div>
+    <button class="dp-btn" id="btnDemoPriceBuy">Activar mi acceso</button>
   </div>
 
   <div class="userbar" id="userbar">
@@ -1038,9 +1091,9 @@
         <thead>
           <tr>
             <th>Gasto</th>
-            <th>Categoría</th>
+            <th class="cat-col">Categoría</th>
             <th class="r">COP</th>
-            <th class="r">USD</th>
+            <th class="r usd-col">USD</th>
             <th class="c"></th>
           </tr>
         </thead>
@@ -1158,7 +1211,7 @@
             <tr>
               <th>Compra</th>
               <th class="r">COP</th>
-              <th class="r">USD</th>
+              <th class="r usd-col">USD</th>
               <th class="c">Cuotas</th>
               <th class="c"></th>
             </tr>
@@ -1405,9 +1458,11 @@
   document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
   document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
   document.getElementById('btnDemoBuy').addEventListener('click', ()=> showActivate('demo'));
+  document.getElementById('btnDemoPriceBuy').addEventListener('click', ()=> showActivate('demo'));
   document.getElementById('btnDemoExit').addEventListener('click', ()=>{
     demoMode = false;
     document.getElementById('demoBanner').style.display = "none";
+    document.getElementById('demoPrice').style.display = "none";
     showOnly(gateWelcome);
   });
 
@@ -1442,6 +1497,7 @@
     rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
     ccRows = []; cupo = null; ccPagos = [];
     document.getElementById('demoBanner').style.display = "";
+    document.getElementById('demoPrice').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
     fillBudgetInputs(); fillCupoInput();
@@ -1461,6 +1517,7 @@
     demoMode = false;
     currentUser = user;
     document.getElementById('demoBanner').style.display = "none";
+    document.getElementById('demoPrice').style.display = "none";
     document.getElementById('userbar').style.display = "";
     document.getElementById('ubName').textContent = user.displayName || "Mi cuenta";
     document.getElementById('ubMail').textContent = user.email || "";
@@ -1977,10 +2034,11 @@
           <td>
             <div class="desc">${escapeHtml(r.desc)}</div>
             <div class="date">${fmtFecha(r.fecha)}${pagoLbl ? ' · ' + pagoLbl : ''}</div>
+            <div class="cat-inline" style="color:${c.color}">${c.emoji} ${c.nombre}</div>
           </td>
-          <td><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span></td>
-          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}</td>
-          <td class="r mono usd">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
+          <td class="cat-col"><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span></td>
+          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}<small class="usd-sub">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</small></td>
+          <td class="r mono usd usd-col">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
           <td class="c"><div class="row-actions">
             <button class="edit" title="Editar" data-id="${r.id}">✎</button>
             <button class="del" title="Eliminar" data-id="${r.id}">✕</button>
@@ -2005,9 +2063,9 @@
       const totUsd = rows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
       tfoot.innerHTML = `<tr>
         <td class="tlabel">Total</td>
-        <td></td>
-        <td class="r mono cop">${fmtCOP.format(totCop)}</td>
-        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
+        <td class="cat-col"></td>
+        <td class="r mono cop">${fmtCOP.format(totCop)}<small class="usd-sub">${fmtUSD.format(totUsd)}</small></td>
+        <td class="r mono usd usd-col">${fmtUSD.format(totUsd)}</td>
         <td></td>
       </tr>`;
 
@@ -2302,8 +2360,8 @@
             <div class="desc">${escapeHtml(r.desc)}</div>
             <div class="date">${fmtFecha(r.fecha)}</div>
           </td>
-          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}</td>
-          <td class="r mono usd">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
+          <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}<small class="usd-sub">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</small></td>
+          <td class="r mono usd usd-col">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
           <td class="c">
             <span class="cuota-pill">${r.cuotas || 1}x</span>
             <div class="cuota-val">${fmtCOP.format(cuotaVal)}/mes</div>
@@ -2332,8 +2390,8 @@
       const totUsd = ccRows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
       ccTfoot.innerHTML = `<tr>
         <td class="tlabel">Total</td>
-        <td class="r mono cop">${fmtCOP.format(totCop)}</td>
-        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
+        <td class="r mono cop">${fmtCOP.format(totCop)}<small class="usd-sub">${fmtUSD.format(totUsd)}</small></td>
+        <td class="r mono usd usd-col">${fmtUSD.format(totUsd)}</td>
         <td></td><td></td>
       </tr>`;
 
