@@ -767,6 +767,48 @@
   .markup-check input{ width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
   .markup-check b{ color:var(--gold); }
   .markup-check .hint-mk{ font-size:12.5px; color:var(--text-dim); }
+
+  /* ---------- Pagos / abonos de la tarjeta ---------- */
+  .pay-panel{
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:18px; padding:22px; margin-bottom:24px;
+  }
+  .pay-panel h3{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin-bottom:4px; }
+  .pay-panel .pdesc{ font-size:13px; color:var(--text-dim); margin-bottom:16px; }
+  .pay-form{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .pay-form .field{ flex:1 1 130px; min-width:0; }
+  .pay-form label{ font-size:12px; letter-spacing:.04em; color:var(--text-dim); font-weight:600; display:block; margin-bottom:7px; }
+  .pay-form input{
+    background:var(--ink); border:1px solid var(--line); border-radius:10px;
+    padding:11px 13px; color:var(--text); font-family:'JetBrains Mono',monospace;
+    font-size:14px; width:100%;
+  }
+  .pay-form input:focus{ outline:none; border-color:var(--emerald); box-shadow:0 0 0 3px rgba(95,197,155,.14); }
+  .pay-form button{
+    background:linear-gradient(180deg, var(--emerald), #4daf88); color:#04140c;
+    border:none; border-radius:10px; padding:12px 22px; font-weight:700; cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; white-space:nowrap; flex:0 0 auto;
+  }
+  .pay-form button:hover{ filter:brightness(1.07); }
+  .pay-list{ margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .pay-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--ink); border:1px solid var(--line-soft); border-radius:10px;
+    padding:11px 14px; font-size:14px;
+  }
+  .pay-item .pi-left{ display:flex; flex-direction:column; gap:2px; }
+  .pay-item .pi-amt{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--emerald); }
+  .pay-item .pi-date{ font-size:12.5px; color:var(--text-dim); }
+  .pay-item button{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; transition:all .16s;
+  }
+  .pay-item button:hover{ border-color:var(--rose); color:var(--rose); }
+  .pay-empty{ font-size:13px; color:var(--text-faint); padding:8px 2px; }
+  @media (max-width:480px){
+    .pay-form .field{ flex:1 1 100%; }
+    .pay-form button{ flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -1019,16 +1061,38 @@
         <div class="v cop" id="ccDeudaCop">$0</div>
         <div class="sub" id="ccCount">0 compras registradas</div>
       </div>
-      <div class="stat">
-        <div class="k">Deuda total (USD)</div>
-        <div class="v usd" id="ccDeudaUsd">$0.00</div>
-        <div class="sub">equivalente en dólares</div>
+      <div class="stat" id="ccPagadoCard">
+        <div class="k">Has pagado</div>
+        <div class="v green" id="ccPagado">$0</div>
+        <div class="sub" id="ccPagadoSub">abonos registrados</div>
       </div>
-      <div class="stat alt">
+      <div class="stat alt" id="ccSaldoCard">
+        <div class="k">Saldo pendiente</div>
+        <div class="v amber" id="ccSaldo">$0</div>
+        <div class="sub">lo que te falta por pagar</div>
+      </div>
+      <div class="stat">
         <div class="k">Cuota mensual total</div>
         <div class="v green" id="ccCuota">$0</div>
         <div class="sub">suma de las cuotas del mes</div>
       </div>
+    </section>
+
+    <section class="pay-panel">
+      <h3>💚 Registrar un pago / abono</h3>
+      <div class="pdesc">Cuando pagues tu tarjeta (total o parcial), regístralo aquí para ver cuánto te queda pendiente.</div>
+      <div class="pay-form">
+        <div class="field">
+          <label for="ccPagoMonto">Monto del pago (COP)</label>
+          <input type="number" id="ccPagoMonto" placeholder="ej: 500.000" step="1" min="0" />
+        </div>
+        <div class="field" style="flex:0 0 auto">
+          <label for="ccPagoFecha">Fecha</label>
+          <input type="date" id="ccPagoFecha" />
+        </div>
+        <button id="ccPagoAdd">Registrar pago</button>
+      </div>
+      <div class="pay-list" id="ccPagoList"></div>
     </section>
 
     <section class="panel">
@@ -1216,8 +1280,10 @@
   // Datos de la vista TARJETA DE CRÉDITO
   const KEY_CC = "gastos_app_cc_v2";
   const KEY_CUPO = "gastos_app_cupo_v2";
+  const KEY_CCPAY = "gastos_app_ccpay_v2";
   let ccRows = load(KEY_CC, []);       // compras tarjeta [{id, desc, usd, cop, trm, cuotas, markup, fecha}]
   let cupo = load(KEY_CUPO, null);     // cupo total de la tarjeta
+  let ccPagos = load(KEY_CCPAY, []);   // pagos/abonos [{id, monto, fecha}]
 
 
   // ======================================================================
@@ -1326,19 +1392,19 @@
   //  En modo demo NO se guarda nada (ni local ni nube): es solo prueba.
   function cloudWrite(){
     if(demoMode || !userRef) return;
-    try{ userRef.set({ rows, budget, ccRows, cupo:(cupo==null?null:cupo), updatedAt:Date.now() }); }
+    try{ userRef.set({ rows, budget, ccRows, cupo:(cupo==null?null:cupo), ccPagos, updatedAt:Date.now() }); }
     catch(e){ console.warn("Error guardando:", e); }
   }
   function persist(){ if(!demoMode) save(KEY, rows); cloudWrite(); }
   function persistBudget(){ if(!demoMode) save(KEY_BUDGET, budget); cloudWrite(); }
-  function persistCC(){ if(!demoMode){ save(KEY_CC, ccRows); save(KEY_CUPO, cupo); } cloudWrite(); }
+  function persistCC(){ if(!demoMode){ save(KEY_CC, ccRows); save(KEY_CUPO, cupo); save(KEY_CCPAY, ccPagos); } cloudWrite(); }
 
   // ---------- Modo DEMO (sin login, sin guardar) ----------
   function startDemo(){
     demoMode = true;
     currentUser = null; userRef = null;
     rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
-    ccRows = []; cupo = null;
+    ccRows = []; cupo = null; ccPagos = [];
     document.getElementById('demoBanner').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
@@ -1375,7 +1441,8 @@
       budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
       ccRows = Array.isArray(data.ccRows) ? data.ccRows : [];
       cupo   = (data.cupo == null ? null : data.cupo);
-      save(KEY, rows); save(KEY_BUDGET, budget); save(KEY_CC, ccRows); save(KEY_CUPO, cupo);
+      ccPagos = Array.isArray(data.ccPagos) ? data.ccPagos : [];
+      save(KEY, rows); save(KEY_BUDGET, budget); save(KEY_CC, ccRows); save(KEY_CUPO, cupo); save(KEY_CCPAY, ccPagos);
       fillBudgetInputs(); fillCupoInput();
       render(); renderCC();
     });
@@ -1684,8 +1751,8 @@
 
   // ---------- Reset ----------
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    if((rows.length === 0 && ccRows.length === 0) || confirm("¿Seguro que quieres borrar TODO (gastos del mes y compras de tarjeta)? Esta acción no se puede deshacer.")){
-      rows = []; ccRows = [];
+    if((rows.length === 0 && ccRows.length === 0) || confirm("¿Seguro que quieres borrar TODO (gastos del mes, compras y pagos de tarjeta)? Esta acción no se puede deshacer.")){
+      rows = []; ccRows = []; ccPagos = [];
       persist(); persistCC();
       render(); renderCC();
     }
@@ -1700,7 +1767,8 @@
       rows: rows,
       budget: budget,
       ccRows: ccRows,
-      cupo: cupo
+      cupo: cupo,
+      ccPagos: ccPagos
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type:"application/json" });
     const url = URL.createObjectURL(blob);
@@ -1728,6 +1796,7 @@
         budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
         ccRows = Array.isArray(data.ccRows) ? data.ccRows : [];
         cupo = (data.cupo == null ? null : data.cupo);
+        ccPagos = Array.isArray(data.ccPagos) ? data.ccPagos : [];
         fillBudgetInputs(); fillCupoInput();
         persist(); persistCC();
         render(); renderCC();
@@ -1915,6 +1984,32 @@
     persistCC(); renderCC();
   });
 
+  // ---------- Pagos / abonos ----------
+  const ccPagoMonto = document.getElementById('ccPagoMonto');
+  const ccPagoFecha = document.getElementById('ccPagoFecha');
+  ccPagoFecha.value = todayISO();
+
+  function ccAddPago(){
+    const monto = parseFloat(ccPagoMonto.value);
+    if(isNaN(monto) || monto <= 0){ ccPagoMonto.focus(); return; }
+    ccPagos.push({
+      id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      monto,
+      fecha: ccPagoFecha.value || todayISO()
+    });
+    persistCC();
+    ccPagoMonto.value = "";
+    ccPagoFecha.value = todayISO();
+    renderCC();
+    showToast("💚 Pago registrado");
+  }
+  function ccDelPago(id){
+    ccPagos = ccPagos.filter(p => p.id !== id);
+    persistCC(); renderCC();
+  }
+  document.getElementById('ccPagoAdd').addEventListener('click', ccAddPago);
+  ccPagoMonto.addEventListener('keydown', e=>{ if(e.key === 'Enter') ccAddPago(); });
+
   // Tasa efectiva: con recargo solo si el check está activo
   function ccEffRate(){
     const t = trm.value || 0;
@@ -2067,21 +2162,51 @@
     const totCop = ccRows.reduce((s,r)=> s + (r.cop||0), 0);
     const totUsd = ccRows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
     const totCuota = ccRows.reduce((s,r)=> s + ((r.cop||0)/(r.cuotas||1)), 0);
+    const totPagado = ccPagos.reduce((s,p)=> s + (p.monto||0), 0);
+    const saldo = totCop - totPagado;
     document.getElementById('ccDeudaCop').textContent = fmtCOP.format(totCop);
-    document.getElementById('ccDeudaUsd').textContent = fmtUSD.format(totUsd);
     document.getElementById('ccCuota').textContent    = fmtCOP.format(totCuota);
     document.getElementById('ccCount').textContent    =
       ccRows.length + (ccRows.length === 1 ? " compra registrada" : " compras registradas");
 
-    // Cupo disponible (tarjeta visual)
+    // Pagado
+    document.getElementById('ccPagado').textContent = fmtCOP.format(totPagado);
+    document.getElementById('ccPagadoSub').textContent =
+      ccPagos.length === 0 ? "aún no has registrado pagos"
+      : ccPagos.length + (ccPagos.length === 1 ? " pago registrado" : " pagos registrados");
+
+    // Saldo pendiente
+    const ccSaldoEl = document.getElementById('ccSaldo');
+    ccSaldoEl.textContent = fmtCOP.format(saldo);
+    ccSaldoEl.className = "v " + (saldo <= 0 ? "green" : "amber");
+
+    // Lista de pagos
+    const payList = document.getElementById('ccPagoList');
+    if(ccPagos.length === 0){
+      payList.innerHTML = '<div class="pay-empty">Aquí aparecerán los pagos que registres.</div>';
+    } else {
+      const ordered = ccPagos.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+      payList.innerHTML = ordered.map(p=>`
+        <div class="pay-item">
+          <div class="pi-left">
+            <span class="pi-amt">− ${fmtCOP.format(p.monto)}</span>
+            <span class="pi-date">${fmtFecha(p.fecha)}</span>
+          </div>
+          <button title="Eliminar pago" data-pid="${p.id}">✕</button>
+        </div>`).join("");
+      payList.querySelectorAll('button[data-pid]').forEach(b=>
+        b.addEventListener('click', ()=> ccDelPago(b.dataset.pid)));
+    }
+
+    // Cupo disponible (tarjeta visual) — usa el saldo pendiente (deuda - pagos)
     const ccAvail = document.getElementById('ccAvail');
     const ccSub   = document.getElementById('ccSub');
     const ccBar   = document.getElementById('ccBar');
     if(cupo){
-      const left = cupo - totCop;
+      const left = cupo - saldo;   // lo que realmente tienes disponible considerando pagos
       ccAvail.textContent = fmtCOP.format(left);
       ccAvail.className = "cc-avail" + (left < 0 ? " over" : "");
-      const pct = Math.max(0, Math.min(100, (totCop / cupo) * 100));
+      const pct = Math.max(0, Math.min(100, (saldo / cupo) * 100));
       ccSub.textContent = left < 0
         ? `te pasaste ${fmtCOP.format(Math.abs(left))} de tu cupo de ${fmtCOP.format(cupo)}`
         : `usado ${pct.toFixed(0)}% de tu cupo de ${fmtCOP.format(cupo)}`;
