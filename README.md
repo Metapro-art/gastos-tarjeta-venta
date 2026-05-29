@@ -1,2 +1,2 @@
 # gastos-tarjeta-venta
-una app sencilla apra llevar tus gastos 
+una app sencilla para llevar tus gastos 
