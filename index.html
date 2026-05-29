@@ -566,6 +566,23 @@
   }
   .hint{ font-size:13px; color:var(--text-faint); max-width:55ch; }
   .export-note{ font-size:12.5px; color:var(--text-faint); line-height:1.55; margin-top:14px; max-width:70ch; }
+
+  /* ---------- Barra de ordenamiento de tablas ---------- */
+  .sort-bar{
+    display:flex; align-items:center; justify-content:flex-end; gap:9px;
+    margin-bottom:12px; flex-wrap:wrap;
+  }
+  .sort-bar label{ font-size:12.5px; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:6px; }
+  .sort-bar select{
+    background:var(--surface); border:1px solid var(--line); color:var(--text);
+    border-radius:9px; padding:8px 12px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .sort-bar select:focus{ outline:none; border-color:var(--gold-soft); }
+  @media (max-width:480px){
+    .sort-bar{ justify-content:space-between; }
+    .sort-bar select{ flex:1; max-width:60%; }
+  }
   .btn-reset{
     background:transparent; border:1px solid var(--line);
     color:var(--text-dim); border-radius:11px; padding:11px 20px;
@@ -1099,6 +1116,16 @@
     <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Este gasto también se guardará en <b>“Mi tarjeta de crédito”</b> y quedará vinculado: si lo editas o borras aquí, también cambia allá.</div>
   </section>
 
+  <div class="sort-bar">
+    <label for="sortGastos">↕ Ordenar por</label>
+    <select id="sortGastos">
+      <option value="fecha-desc">Más recientes</option>
+      <option value="fecha-asc">Más antiguos</option>
+      <option value="valor-desc">Mayor valor</option>
+      <option value="valor-asc">Menor valor</option>
+    </select>
+  </div>
+
   <div class="table-card">
     <div class="table-scroll">
       <table>
@@ -1217,6 +1244,16 @@
       </label>
       <div class="rate-line" id="ccRateLine">💱 TRM del día: <b id="ccRateInfo">—</b></div>
     </section>
+
+    <div class="sort-bar">
+      <label for="sortCc">↕ Ordenar por</label>
+      <select id="sortCc">
+        <option value="fecha-desc">Más recientes</option>
+        <option value="fecha-asc">Más antiguos</option>
+        <option value="valor-desc">Mayor valor</option>
+        <option value="valor-asc">Menor valor</option>
+      </select>
+    </div>
 
     <div class="table-card">
       <div class="table-scroll">
@@ -1359,6 +1396,7 @@
     { id:"salud",      nombre:"Salud",           emoji:"💊", color:"#bb9af7" },
     { id:"ocio",       nombre:"Ocio y diversión",emoji:"🎉", color:"#f7768e" },
     { id:"educacion",  nombre:"Educación",       emoji:"📚", color:"#7dcfff" },
+    { id:"tarjeta",    nombre:"Tarjeta de crédito", emoji:"💳", color:"#c9a04a" },
     { id:"otros",      nombre:"Otros",           emoji:"📦", color:"#9aa0ad" }
   ];
   const catById = (id) => CATEGORIAS.find(c => c.id === id) || CATEGORIAS[CATEGORIAS.length-1];
@@ -1748,6 +1786,7 @@
   let lastEdited = 'cop'; // por defecto la gente escribe en pesos
   const PAGE = 10;            // registros visibles antes de "Ver más"
   let visibleRows = PAGE;     // cuántos gastos se muestran ahora
+  let sortGastos = 'fecha-desc';   // orden actual de la tabla de gastos
 
   // Llena el desplegable de categorías
   fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+c.emoji+' '+c.nombre+'</option>').join('');
@@ -1776,6 +1815,18 @@
       return new Date(y, m-1, da).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
     }
     return v;
+  }
+  // Ordena una lista de registros según el criterio elegido
+  function sortRecords(arr, criterio){
+    const a = arr.slice();
+    switch(criterio){
+      case 'fecha-asc':  a.sort((x,y)=> String(x.fecha).localeCompare(String(y.fecha))); break;
+      case 'valor-desc': a.sort((x,y)=> (y.cop||0) - (x.cop||0)); break;
+      case 'valor-asc':  a.sort((x,y)=> (x.cop||0) - (y.cop||0)); break;
+      case 'fecha-desc':
+      default:           a.sort((x,y)=> String(y.fecha).localeCompare(String(x.fecha))); break;
+    }
+    return a;
   }
   fFecha.value = todayISO();
 
@@ -2039,8 +2090,8 @@
       </div></td></tr>`;
       tfoot.innerHTML = "";
     } else {
-      // Más recientes primero
-      const ordered = rows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+      // Orden según el filtro elegido
+      const ordered = sortRecords(rows, sortGastos);
       const shown = ordered.slice(0, visibleRows);
       tbody.innerHTML = shown.map(r=>{
         const c = catById(r.cat);
@@ -2199,6 +2250,7 @@
   let ccEditingId = null;
   let ccLast = 'cop';   // último campo escrito
   let visibleCcRows = PAGE;  // cuántas compras de tarjeta se muestran ahora
+  let sortCc = 'fecha-desc';  // orden actual de la tabla de tarjeta
 
   ccFecha.value = todayISO();
 
@@ -2297,14 +2349,22 @@
         }
       }
       ccFinishEdit();
+      persistCC();
     } else {
+      // Nueva compra: se crea también su gasto vinculado (categoría "tarjeta")
+      const fecha = ccFecha.value || todayISO();
+      const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
       ccRows.push({
-        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-        desc, usd, cop, trm:t, cuotas, markup,
-        fecha: ccFecha.value || todayISO()
+        id: "cc_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+        linkId, desc, usd, cop, trm:t, cuotas, markup, fecha
       });
+      rows.push({
+        id: "g_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+        linkId, desc, cat:"tarjeta", usd, cop, trm:t, pago:"credito", markup, fecha
+      });
+      persistCC(); persist(); render();
+      showToast("📊 También se sumó a “Gastos del mes”");
     }
-    persistCC();
     ccDesc.value=""; ccUsd.value=""; ccCop.value=""; ccCuotas.value="1"; ccMarkup.checked=false;
     ccFecha.value = todayISO(); ccLast='cop';
     ccDesc.focus(); renderCC();
@@ -2366,7 +2426,7 @@
       </div></td></tr>`;
       ccTfoot.innerHTML = "";
     } else {
-      const ordered = ccRows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+      const ordered = sortRecords(ccRows, sortCc);
       const shown = ordered.slice(0, visibleCcRows);
       ccTbody.innerHTML = shown.map(r=>{
         const cuotaVal = r.cop / (r.cuotas || 1);
@@ -2496,6 +2556,9 @@
   // Botones "Ver más"
   document.getElementById('btnVerMasGastos').addEventListener('click', ()=>{ visibleRows += PAGE; render(); });
   document.getElementById('btnVerMasCc').addEventListener('click', ()=>{ visibleCcRows += PAGE; renderCC(); });
+  // Selectores de orden
+  document.getElementById('sortGastos').addEventListener('change', (e)=>{ sortGastos = e.target.value; visibleRows = PAGE; render(); });
+  document.getElementById('sortCc').addEventListener('change', (e)=>{ sortCc = e.target.value; visibleCcRows = PAGE; renderCC(); });
   // Botones "Ver menos" (colapsan a 10 y suben a la tabla)
   document.getElementById('btnVerMenosGastos').addEventListener('click', ()=>{
     visibleRows = PAGE; render();
