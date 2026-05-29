@@ -397,6 +397,10 @@
     cursor:pointer; transition:all .16s; width:100%;
   }
   .btn-have:hover{ border-color:var(--gold-soft); color:var(--gold); }
+  /* Divisor "¿Ya tienes cuenta?" con línea a los lados */
+  .login-divider{ display:flex; align-items:center; gap:12px; margin:4px 0; }
+  .login-divider::before, .login-divider::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .login-divider span{ font-size:12.5px; color:var(--text-faint); font-weight:600; white-space:nowrap; }
   .gate-feats{ list-style:none; padding:0; margin:22px 0 6px; text-align:left; display:flex; flex-direction:column; gap:10px; }
   .gate-feats li{
     font-size:13.5px; color:var(--text-dim); line-height:1.45;
@@ -617,6 +621,26 @@
     cursor:pointer; transition:all .16s;
   }
   .btn-ghost:hover{ border-color:var(--gold-soft); color:var(--gold); background:rgba(224,179,87,.06); }
+
+  /* Menú desplegable de exportación */
+  .export-menu{ position:relative; }
+  .export-dropdown{
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:12px;
+    padding:6px; min-width:260px; box-shadow:var(--shadow);
+  }
+  .export-dropdown.show{ display:block; }
+  .export-dropdown button{
+    display:block; width:100%; text-align:left; background:none; border:none;
+    color:var(--text); border-radius:8px; padding:11px 13px; cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600;
+    transition:background .14s;
+  }
+  .export-dropdown button:hover{ background:var(--surface); color:var(--gold); }
+  .export-dropdown button small{ color:var(--text-faint); font-weight:500; font-size:12px; }
+  @media (max-width:480px){
+    .export-dropdown{ min-width:0; width:100%; left:0; right:0; }
+  }
 
   .cupo-mini{
     display:flex; align-items:center; gap:10px; margin-top:14px;
@@ -939,8 +963,12 @@
       <li><b>Disponible donde estés:</b> inicia sesión con tu correo desde cualquier dispositivo y tu información estará sincronizada al instante.</li>
     </ul>
     <div class="gate-actions">
-      <button class="btn-try" id="btnTry">Probar gratis</button>
-      <button class="btn-have" id="btnHave">Ya tengo acceso</button>
+      <button class="btn-try" id="btnTry">Pruébalo ahora</button>
+      <div class="login-divider"><span>¿Ya tienes cuenta?</span></div>
+      <button class="btn-google" id="btnGoogleHome">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.3 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3-.8-4.4s.3-3 .8-4.4l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.6 10.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.4 2.1-6.3 0-11.7-4.2-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
+        Iniciar sesión con Google
+      </button>
     </div>
     <div class="gate-foot">Pruébala sin registrarte, sin compromiso. Explora todo y mira si te sirve.</div>
   </div>
@@ -978,7 +1006,7 @@
       Escríbeme por WhatsApp
     </a>
     <div class="gate-status" id="deniedActions"></div>
-    <div class="refer-tip">🎁 <b>Tip:</b> una vez actives tu acceso, puedes ganar <b>$5.000</b> por cada amigo que invites. ¡Tu acceso se puede pagar solo!</div>
+    <div class="refer-tip">🎁 <b>Tip:</b> una vez actives tu acceso, ganas <b>$5.000</b> debitados de vuelta en tu cuenta de Nequi por cada persona confirmada que invites y se suscriba. ¡Tu acceso se puede pagar solo: refiere y gana!</div>
     <div class="disclaimer">El pago es único: no se cobran mensualidades ni cargos recurrentes. El acceso se mantiene mientras el servicio esté disponible. Como toda herramienta digital, la aplicación podría modificarse o descontinuarse en el futuro; al activar tu acceso aceptas esta condición.</div>
   </div>
 </div>
@@ -1300,15 +1328,32 @@
 
   </div><!-- /viewTarjeta -->
 
+  <section class="referral" id="referralBox">
+    <h3>🎁 Refiere y gana <span class="ref-amount">$5.000</span></h3>
+    <p>Invita a tus amigos a usar Control de Gastos. Por cada persona confirmada que active su acceso gracias a ti, te devolvemos <b>$5.000 COP</b> a tu Nequi. ¡Sin límite de amigos!</p>
+    <ol>
+      <li>Cuéntale a tu amigo sobre la app y pásale el enlace.</li>
+      <li>Cuando él vaya a activar su acceso, que <b>mencione por WhatsApp tu correo y tu número de Nequi</b>.</li>
+      <li>Apenas confirmemos su pago, te reembolsamos tus <b>$5.000</b>. 🎉</li>
+    </ol>
+  </section>
+
   <div class="actions">
-    <p class="hint">💾 Tus datos se guardan solos en tu cuenta y se sincronizan en todos tus dispositivos. Aquí puedes además descargar una copia.</p>
+    <p class="hint">💾 Tus datos se guardan solos en tu cuenta y se sincronizan en todos tus dispositivos. Aquí puedes además descargar tu información.</p>
     <div class="action-btns">
-      <button class="btn-ghost" id="btnExport">⬇ Exportar mis gastos</button>
+      <div class="export-menu">
+        <button class="btn-ghost" id="btnExport">⬇ Exportar mis gastos ▾</button>
+        <div class="export-dropdown" id="exportDropdown">
+          <button data-fmt="excel">📊 Excel / hoja de cálculo <small>(.csv)</small></button>
+          <button data-fmt="pdf">📄 PDF para imprimir o guardar</button>
+          <button data-fmt="json">💾 Copia de seguridad <small>(.json)</small></button>
+        </div>
+      </div>
       <button class="btn-ghost" id="btnImport">⬆ Importar una copia</button>
       <button class="btn-reset" id="btnReset">↺ Borrar todo</button>
       <input type="file" id="fileImport" accept="application/json,.json" style="display:none" />
     </div>
-    <p class="export-note">“Exportar mis gastos” descarga un archivo con toda tu información (gastos del mes, compras y pagos de tu tarjeta) para guardarlo en tu computador como copia de seguridad. Con “Importar” puedes volver a cargar esa copia cuando quieras.</p>
+    <p class="export-note"><b>Exportar mis gastos</b> te deja descargar tu información en tres formatos: <b>Excel</b> (una hoja de cálculo que puedes abrir en Excel o Google Sheets para hacer tus propias cuentas), <b>PDF</b> (un documento listo para imprimir o archivar) y <b>copia de seguridad</b> (un archivo .json que luego puedes volver a cargar con “Importar”). Todos incluyen tus gastos del mes, las compras y los pagos de tu tarjeta.</p>
   </div>
 
 </div>
@@ -1579,7 +1624,6 @@
 
   // ---------- Navegación de bienvenida ----------
   document.getElementById('btnTry').addEventListener('click', startDemo);
-  document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
   document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
   document.getElementById('btnDemoPriceBuy').addEventListener('click', ()=> showActivate('demo'));
   document.getElementById('btnDemoLogin').addEventListener('click', ()=>{
@@ -1594,15 +1638,18 @@
   });
 
   // ---------- Login / Logout ----------
-  document.getElementById('btnGoogle').addEventListener('click', ()=>{
-    if(!auth){ loginStatus.textContent = "Error de configuración."; return; }
-    loginStatus.textContent = "Abriendo Google…";
+  function startGoogleLogin(statusEl){
+    if(!auth){ if(statusEl) statusEl.textContent = "Error de configuración."; return; }
+    if(statusEl) statusEl.textContent = "Abriendo Google…";
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(err=>{
-      loginStatus.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
+      if(statusEl) statusEl.textContent = "No se pudo iniciar sesión. Intenta de nuevo.";
       console.warn(err);
     });
-  });
+  }
+  document.getElementById('btnGoogle').addEventListener('click', ()=> startGoogleLogin(loginStatus));
+  const btnGoogleHome = document.getElementById('btnGoogleHome');
+  if(btnGoogleHome) btnGoogleHome.addEventListener('click', ()=> startGoogleLogin(null));
   function doLogout(){ if(auth) auth.signOut(); }
   document.getElementById('btnLogout').addEventListener('click', doLogout);
 
@@ -2125,29 +2172,144 @@
   resetModal.addEventListener('click', (e)=>{ if(e.target === resetModal) resetModal.classList.remove('show'); });
   document.getElementById('resetExportFirst').addEventListener('click', ()=>{
     resetModal.classList.remove('show');
-    document.getElementById('btnExport').click();   // dispara la exportación
+    exportarJSON();   // descarga la copia de seguridad directamente
+    showToast("💾 Copia descargada · ya puedes borrar con tranquilidad");
   });
 
   // ---------- Exportar / Importar respaldo ----------
-  document.getElementById('btnExport').addEventListener('click', ()=>{
-    const backup = {
-      app: "control-gastos",
-      version: 3,
-      exportadoEl: new Date().toISOString(),
-      rows: rows,
-      budget: budget,
-      ccRows: ccRows,
-      cupo: cupo,
-      ccPagos: ccPagos
-    };
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type:"application/json" });
+  // ---------- Exportación: Excel (CSV), PDF y respaldo (JSON) ----------
+  function descargarArchivo(contenido, nombre, tipo){
+    const blob = new Blob([contenido], { type: tipo });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const stamp = new Date().toISOString().slice(0,10);
-    a.href = url;
-    a.download = "respaldo-gastos-" + stamp + ".json";
+    a.href = url; a.download = nombre;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  function stampHoy(){ return new Date().toISOString().slice(0,10); }
+
+  // Exportar a JSON (copia de seguridad)
+  function exportarJSON(){
+    const backup = {
+      app: "control-gastos", version: 3, exportadoEl: new Date().toISOString(),
+      rows, budget, ccRows, cupo, ccPagos
+    };
+    descargarArchivo(JSON.stringify(backup, null, 2), "respaldo-gastos-" + stampHoy() + ".json", "application/json");
+  }
+
+  // Exportar a CSV (Excel / hoja de cálculo)
+  function csvCampo(v){
+    const s = String(v == null ? "" : v);
+    return /[",;\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }
+  function exportarCSV(){
+    const sep = ";";   // Excel en español usa ; como separador
+    const L = [];
+    L.push("CONTROL DE GASTOS - Exportado el " + stampHoy());
+    L.push("");
+    // Gastos del mes
+    L.push("GASTOS DEL MES");
+    L.push(["Fecha","Descripción","Categoría","Pagado con","COP","USD","TRM"].map(csvCampo).join(sep));
+    rows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).forEach(r=>{
+      const c = catById(r.cat);
+      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='efectivo'?'Efectivo':'';
+      L.push([r.fecha, r.desc, c.nombre, pago, Math.round(r.cop), (r.usd!=null?r.usd.toFixed(2):''), (r.trm||'')].map(csvCampo).join(sep));
+    });
+    const totCop = rows.reduce((s,r)=>s+(r.cop||0),0);
+    L.push(["","","","","TOTAL COP:",Math.round(totCop)].map(csvCampo).join(sep));
+    L.push(""); L.push("");
+    // Compras de tarjeta
+    L.push("COMPRAS CON TARJETA DE CRÉDITO");
+    L.push(["Fecha","Descripción","COP","USD","Cuotas","TRM"].map(csvCampo).join(sep));
+    ccRows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).forEach(r=>{
+      L.push([r.fecha, r.desc, Math.round(r.cop), (r.usd!=null?r.usd.toFixed(2):''), (r.cuotas||1), (r.trm||'')].map(csvCampo).join(sep));
+    });
+    const totCC = ccRows.reduce((s,r)=>s+(r.cop||0),0);
+    L.push(["","","","TOTAL COP:",Math.round(totCC)].map(csvCampo).join(sep));
+    L.push(""); L.push("");
+    // Pagos / abonos de tarjeta
+    L.push("PAGOS Y ABONOS DE TARJETA");
+    L.push(["Fecha","Monto COP"].map(csvCampo).join(sep));
+    ccPagos.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).forEach(p=>{
+      L.push([p.fecha, Math.round(p.monto)].map(csvCampo).join(sep));
+    });
+    const totPag = ccPagos.reduce((s,p)=>s+(p.monto||0),0);
+    L.push(["TOTAL pagado:",Math.round(totPag)].map(csvCampo).join(sep));
+    // BOM para que Excel respete los acentos
+    descargarArchivo("\uFEFF" + L.join("\r\n"), "gastos-" + stampHoy() + ".csv", "text/csv;charset=utf-8");
+  }
+
+  // Exportar a PDF (ventana imprimible)
+  function exportarPDF(){
+    const fmtP = (n)=> "$" + Math.round(n).toLocaleString('es-CO');
+    const fmtU = (n)=> "US$" + (n!=null? n.toFixed(2): "0.00");
+    const filasG = rows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(r=>{
+      const c = catById(r.cat);
+      const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='efectivo'?'Efectivo':'';
+      return `<tr><td>${fmtFecha(r.fecha)}</td><td>${escapeHtml(r.desc)}</td><td>${c.emoji} ${c.nombre}</td><td>${pago}</td><td class="r">${fmtP(r.cop)}</td><td class="r">${fmtU(r.usd)}</td></tr>`;
+    }).join("");
+    const totCop = rows.reduce((s,r)=>s+(r.cop||0),0);
+    const filasCC = ccRows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(r=>
+      `<tr><td>${fmtFecha(r.fecha)}</td><td>${escapeHtml(r.desc)}</td><td class="c">${r.cuotas||1}x</td><td class="r">${fmtP(r.cop)}</td><td class="r">${fmtU(r.usd)}</td></tr>`
+    ).join("");
+    const totCC = ccRows.reduce((s,r)=>s+(r.cop||0),0);
+    const filasPag = ccPagos.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(p=>
+      `<tr><td>${fmtFecha(p.fecha)}</td><td class="r">${fmtP(p.monto)}</td></tr>`
+    ).join("");
+    const totPag = ccPagos.reduce((s,p)=>s+(p.monto||0),0);
+    const saldo = totCC - totPag;
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Control de Gastos - ${stampHoy()}</title>
+    <style>
+      *{ box-sizing:border-box; }
+      body{ font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#1a1a1a; padding:32px; max-width:820px; margin:auto; }
+      h1{ font-size:24px; margin:0 0 4px; } h2{ font-size:16px; margin:28px 0 8px; color:#7a5c00; border-bottom:2px solid #e0b357; padding-bottom:4px; }
+      .meta{ color:#666; font-size:13px; margin-bottom:8px; }
+      table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:6px; }
+      th{ text-align:left; background:#f4efe2; padding:8px 10px; border-bottom:2px solid #e0b357; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+      td{ padding:7px 10px; border-bottom:1px solid #eee; }
+      td.r,th.r{ text-align:right; } td.c,th.c{ text-align:center; }
+      .tot{ font-weight:700; background:#faf6ec; }
+      .resumen{ margin-top:10px; padding:12px 16px; background:#f4efe2; border-radius:8px; font-size:14px; }
+      .resumen b{ color:#7a5c00; }
+      @media print{ body{ padding:0; } button{ display:none; } }
+      .pbtn{ background:#e0b357; border:none; padding:12px 22px; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:20px; }
+    </style></head><body>
+    <button class="pbtn" onclick="window.print()">🖨️ Imprimir o guardar como PDF</button>
+    <h1>Control de Gastos</h1>
+    <div class="meta">Reporte generado el ${fmtFecha(stampHoy())}</div>
+    <h2>Gastos del mes</h2>
+    <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Pagado con</th><th class="r">COP</th><th class="r">USD</th></tr></thead>
+    <tbody>${filasG || '<tr><td colspan="6">Sin gastos registrados</td></tr>'}</tbody>
+    <tfoot><tr class="tot"><td colspan="4">TOTAL</td><td class="r">${fmtP(totCop)}</td><td></td></tr></tfoot></table>
+    <h2>Compras con tarjeta de crédito</h2>
+    <table><thead><tr><th>Fecha</th><th>Descripción</th><th class="c">Cuotas</th><th class="r">COP</th><th class="r">USD</th></tr></thead>
+    <tbody>${filasCC || '<tr><td colspan="5">Sin compras registradas</td></tr>'}</tbody>
+    <tfoot><tr class="tot"><td colspan="3">TOTAL DEUDA</td><td class="r">${fmtP(totCC)}</td><td></td></tr></tfoot></table>
+    <h2>Pagos y abonos de tarjeta</h2>
+    <table><thead><tr><th>Fecha</th><th class="r">Monto</th></tr></thead>
+    <tbody>${filasPag || '<tr><td colspan="2">Sin pagos registrados</td></tr>'}</tbody>
+    <tfoot><tr class="tot"><td>TOTAL PAGADO</td><td class="r">${fmtP(totPag)}</td></tr></tfoot></table>
+    <div class="resumen">Deuda de tarjeta: <b>${fmtP(totCC)}</b> &nbsp;·&nbsp; Has pagado: <b>${fmtP(totPag)}</b> &nbsp;·&nbsp; Saldo pendiente: <b>${fmtP(saldo)}</b></div>
+    </body></html>`;
+    const w = window.open("", "_blank");
+    if(!w){ alert("Permite las ventanas emergentes para generar el PDF."); return; }
+    w.document.write(html); w.document.close();
+  }
+
+  // Menú desplegable
+  const exportDropdown = document.getElementById('exportDropdown');
+  document.getElementById('btnExport').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    exportDropdown.classList.toggle('show');
+  });
+  document.addEventListener('click', ()=> exportDropdown.classList.remove('show'));
+  exportDropdown.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    const fmt = btn.dataset.fmt;
+    exportDropdown.classList.remove('show');
+    if(fmt === 'excel'){ exportarCSV(); showToast("📊 Descargando tu hoja de cálculo"); }
+    else if(fmt === 'pdf'){ exportarPDF(); }
+    else if(fmt === 'json'){ exportarJSON(); showToast("💾 Descargando tu copia de seguridad"); }
   });
 
   const fileImport = document.getElementById('fileImport');
