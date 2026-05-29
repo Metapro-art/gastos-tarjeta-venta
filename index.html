@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Control de Gastos · Tarjeta de Crédito</title>
+<title>Control de Gastos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -123,6 +123,60 @@
   .stat .v.green{ color:var(--emerald); }
   .stat .v.red{ color:var(--rose); }
   .stat .sub{ font-size:12px; color:var(--text-faint); margin-top:6px; }
+  .stat .v.amber{ color:var(--gold); }
+
+  /* ---------- Barra de progreso del objetivo ---------- */
+  .progress{ height:7px; background:var(--ink); border-radius:99px; overflow:hidden; margin:12px 0 4px; border:1px solid var(--line-soft); }
+  .progress-bar{ height:100%; width:0%; border-radius:99px; background:var(--emerald); transition:width .4s ease, background .3s; }
+  .progress-bar.warn{ background:var(--gold); }
+  .progress-bar.over{ background:var(--rose); }
+
+  /* ---------- Configuración de presupuesto ---------- */
+  .budget-setup{
+    display:grid; grid-template-columns:1fr 1fr auto; gap:14px;
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:16px; padding:18px 20px; margin-bottom:20px;
+  }
+  .bfield{ display:flex; flex-direction:column; gap:7px; }
+  .bfield label{ font-size:12px; letter-spacing:.04em; color:var(--text-dim); font-weight:600; }
+  .bfield input, .bfield select{
+    background:var(--ink); border:1px solid var(--line); border-radius:11px;
+    padding:12px 13px; color:var(--text); font-family:'JetBrains Mono',monospace;
+    font-size:15px; width:100%;
+  }
+  .bfield select{ font-family:'Hanken Grotesk',sans-serif; cursor:pointer; }
+  .bfield input:focus, .bfield select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
+  .bfield.bcur{ min-width:150px; }
+  @media (max-width:620px){ .budget-setup{ grid-template-columns:1fr 1fr; } .bfield.bcur{ grid-column:1 / -1; } }
+
+  /* ---------- Select de categoría en el form ---------- */
+  .field select{
+    background:var(--ink); border:1px solid var(--line); border-radius:11px;
+    padding:13px 14px; color:var(--text); font-family:'Hanken Grotesk',sans-serif;
+    font-size:15px; width:100%; cursor:pointer;
+  }
+  .field select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
+
+  /* ---------- Pill de categoría en la tabla ---------- */
+  .cat-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    border-radius:999px; padding:4px 11px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--line);
+  }
+
+  /* ---------- Resumen por categorías ---------- */
+  .cat-summary{
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:18px; padding:22px; margin-bottom:28px;
+  }
+  .cat-summary h3{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin-bottom:16px; }
+  .cat-row{ margin-bottom:14px; }
+  .cat-row:last-child{ margin-bottom:0; }
+  .cat-row .cat-top{ display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; }
+  .cat-row .cat-name{ color:var(--text); font-weight:600; display:flex; align-items:center; gap:7px; }
+  .cat-row .cat-amt{ color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+  .cat-row .cat-bar-bg{ height:8px; background:var(--ink); border-radius:99px; overflow:hidden; }
+  .cat-row .cat-bar{ height:100%; border-radius:99px; transition:width .4s; }
 
   /* ---------- Form ---------- */
   .panel{
@@ -315,9 +369,19 @@
     cursor:pointer; transition:all .16s; width:100%;
   }
   .btn-have:hover{ border-color:var(--gold-soft); color:var(--gold); }
-  .gate-feats{ list-style:none; padding:0; margin:20px 0 4px; text-align:left; }
-  .gate-feats li{ font-size:13.5px; color:var(--text-dim); padding:5px 0 5px 26px; position:relative; }
-  .gate-feats li::before{ content:"✓"; position:absolute; left:0; color:var(--emerald); font-weight:700; }
+  .gate-feats{ list-style:none; padding:0; margin:22px 0 6px; text-align:left; display:flex; flex-direction:column; gap:10px; }
+  .gate-feats li{
+    font-size:13.5px; color:var(--text-dim); line-height:1.45;
+    padding:13px 14px 13px 46px; position:relative;
+    background:var(--ink); border:1px solid var(--line-soft); border-radius:12px;
+  }
+  .gate-feats li::before{
+    content:"✓"; position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    background:rgba(95,197,155,.15); color:var(--emerald); border-radius:50%;
+    font-size:12px; font-weight:700;
+  }
+  .gate-feats li b{ color:var(--text); font-weight:600; }
 
   /* ---------- Banner modo demo ---------- */
   .demo-banner{
@@ -521,13 +585,13 @@
 <!-- ===== Pantalla de BIENVENIDA ===== -->
 <div class="gate app-hidden" id="gateWelcome">
   <div class="gate-card">
-    <div class="eyebrow">Tarjeta de Crédito</div>
+    <div class="eyebrow">Finanzas personales</div>
     <h1>Control de <em>Gastos</em></h1>
-    <p>Registra tus compras en dólares y mira al instante cuánto es en pesos con la TRM del día. Lleva el control de tu cupo y tus cuotas.</p>
+    <p>La forma más simple de llevar el control de tus gastos y cumplir tu meta de ahorro cada mes.</p>
     <ul class="gate-feats">
-      <li>Conversión USD ↔ COP con la TRM oficial del día</li>
-      <li>Control de cuotas y cuánto te queda de cupo</li>
-      <li>Tus datos sincronizados en todos tus dispositivos</li>
+      <li><b>Conversión dólar–peso</b> con la TRM oficial del Banco de la República, actualizada cada día.</li>
+      <li><b>Calcula tus cuotas</b> y controla cuánto cupo te queda, en tiempo real.</li>
+      <li><b>Tus datos te siguen:</b> entra desde el celular o el computador y todo está ahí.</li>
     </ul>
     <div class="gate-actions">
       <button class="btn-try" id="btnTry">Probar gratis</button>
@@ -577,15 +641,15 @@
 
   <header>
     <div class="brand">
-      <div class="eyebrow">Tarjeta de Crédito</div>
+      <div class="eyebrow">Finanzas personales</div>
       <h1>Control de <em>Gastos</em></h1>
-      <p class="subtitle">Escribe el valor en dólares o en pesos: se completa el otro con la TRM del día + 0,50%. Tus datos se guardan en tu cuenta.</p>
+      <p class="subtitle">Registra cada gasto en pesos o dólares y se convierte solo con la TRM del día. Controla tu objetivo y tu ahorro.</p>
     </div>
 
     <div class="trm-card">
       <div class="label"><span class="dot" id="trmDot"></span> TRM de hoy</div>
       <div class="trm-value"><span id="trmValue">—</span><span class="cur">COP / USD</span></div>
-      <div class="trm-eff" id="trmEff">aplicada (+0,50%): —</div>
+      <div class="trm-eff" id="trmEff">Banco de la República</div>
       <div class="trm-meta">
         <span id="trmDate">Cargando…</span>
         <button id="trmRefresh">actualizar</button>
@@ -595,7 +659,7 @@
   </header>
 
   <div class="demo-banner" id="demoBanner" style="display:none">
-    <div class="dtext"><b>Estás en modo prueba.</b> <span>Puedes usar todo, pero los datos no se guardan al salir.</span></div>
+    <div class="dtext"><b>Modo prueba.</b> <span>Explora la app libremente; al salir no se guarda nada. Actívala y tus gastos quedan guardados en tu cuenta, disponibles desde cualquier dispositivo.</span></div>
     <button id="btnDemoBuy">¿Te gustó? Actívalo</button>
     <button id="btnDemoExit" style="background:transparent;border:1px solid var(--line);color:var(--text-dim)">Salir</button>
   </div>
@@ -620,67 +684,73 @@
     <div class="auth-list" id="authList"></div>
   </section>
 
+  <section class="budget-setup" id="budgetSetup">
+    <div class="bfield">
+      <label for="fIngreso">💰 Ingreso del mes</label>
+      <input type="number" id="fIngreso" class="num" placeholder="ej: 3.000.000" step="1" min="0" />
+    </div>
+    <div class="bfield">
+      <label for="fObjetivo">🎯 Objetivo de gasto</label>
+      <input type="number" id="fObjetivo" class="num" placeholder="ej: 2.000.000" step="1" min="0" />
+    </div>
+    <div class="bfield bcur">
+      <label for="fMoneda">Moneda</label>
+      <select id="fMoneda">
+        <option value="COP">Pesos (COP)</option>
+        <option value="USD">Dólares (USD)</option>
+      </select>
+    </div>
+  </section>
+
   <section class="stats">
     <div class="stat">
-      <div class="k">Total gastado (COP)</div>
-      <div class="v cop" id="totalCop">$0</div>
-      <div class="sub" id="countSub">0 compras registradas</div>
+      <div class="k">Gastado este mes</div>
+      <div class="v cop" id="stGastado">$0</div>
+      <div class="sub" id="countSub">0 gastos registrados</div>
     </div>
-    <div class="stat">
-      <div class="k">Total gastado (USD)</div>
-      <div class="v usd" id="totalUsd">$0.00</div>
-      <div class="sub">suma en dólares</div>
+    <div class="stat alt" id="stObjetivoCard">
+      <div class="k">Objetivo de gasto</div>
+      <div class="v green" id="stObjetivo">—</div>
+      <div class="progress"><div class="progress-bar" id="objBar"></div></div>
+      <div class="sub" id="objSub">define tu objetivo arriba</div>
     </div>
-    <div class="stat alt">
-      <div class="k">Cuota mensual estimada</div>
-      <div class="v green" id="totalCuota">$0</div>
-      <div class="sub">suma de cuotas del mes (COP)</div>
-    </div>
-    <div class="stat warn" id="cupoStat" style="display:none">
-      <div class="k">Cupo disponible</div>
-      <div class="v red" id="cupoLeft">$0</div>
-      <div class="sub" id="cupoSub">de tu cupo total</div>
+    <div class="stat" id="stAhorroCard">
+      <div class="k">Puedes ahorrar</div>
+      <div class="v" id="stAhorro">—</div>
+      <div class="sub" id="ahorroSub">ingreso − gastos del mes</div>
     </div>
   </section>
 
   <section class="panel">
-    <h2><span>＋</span> Nueva compra</h2>
+    <h2><span>＋</span> Nuevo gasto</h2>
     <div class="edit-banner" id="editBanner" style="display:none">
-      ✎ Estás editando una compra registrada.
+      ✎ Estás editando un gasto registrado.
       <button id="btnCancel">Cancelar edición</button>
     </div>
     <div class="form-grid">
       <div class="field wide">
-        <label for="fDesc">Descripción de la compra</label>
-        <input type="text" id="fDesc" placeholder="Ej: Suscripción Adobe, Amazon, vuelo…" />
+        <label for="fDesc">¿En qué gastaste?</label>
+        <input type="text" id="fDesc" placeholder="Ej: Mercado, Uber, cine, cuenta de luz…" />
       </div>
       <div class="field">
-        <label for="fUsd">Valor (USD)</label>
-        <input type="number" id="fUsd" class="num" placeholder="0.00" step="0.01" min="0" />
+        <label for="fCategoria">Categoría</label>
+        <select id="fCategoria" class="num"></select>
       </div>
       <div class="field">
         <label for="fCop">Valor (COP)</label>
         <input type="number" id="fCop" class="num" placeholder="0" step="1" min="0" />
       </div>
       <div class="field">
-        <label for="fTrm">TRM base</label>
-        <input type="number" id="fTrm" class="num" placeholder="auto" step="0.01" min="0" />
+        <label for="fUsd">Valor (USD)</label>
+        <input type="number" id="fUsd" class="num" placeholder="0.00" step="0.01" min="0" />
       </div>
       <div class="field">
-        <label for="fCuotas">Cuotas</label>
-        <input type="number" id="fCuotas" class="num" placeholder="1" step="1" min="1" value="1" />
-      </div>
-      <div class="field">
-        <label for="fFecha">Fecha de compra</label>
+        <label for="fFecha">Fecha</label>
         <input type="date" id="fFecha" class="num" />
       </div>
       <button class="btn-add" id="btnAdd">Agregar</button>
     </div>
-    <div class="rate-line" id="rateLine"><span class="tag">+0,50%</span> Tasa aplicada: —</div>
-    <div class="cupo-mini">
-      <label for="fCupo">Cupo total de la tarjeta (COP, opcional):</label>
-      <input type="number" id="fCupo" placeholder="ej: 10000000" step="1" min="0" />
-    </div>
+    <div class="rate-line" id="rateLine">💱 Se convierte automáticamente con la TRM del día: <b id="rateInfo">—</b></div>
   </section>
 
   <div class="table-card">
@@ -688,11 +758,10 @@
       <table>
         <thead>
           <tr>
-            <th>Descripción</th>
+            <th>Gasto</th>
+            <th>Categoría</th>
+            <th class="r">COP</th>
             <th class="r">USD</th>
-            <th class="r">TRM +0,5%</th>
-            <th class="r">Valor (COP)</th>
-            <th class="c">Cuotas</th>
             <th class="c"></th>
           </tr>
         </thead>
@@ -701,6 +770,11 @@
       </table>
     </div>
   </div>
+
+  <section class="cat-summary" id="catSummary" style="display:none">
+    <h3>📊 ¿En qué se va tu plata?</h3>
+    <div id="catRows"></div>
+  </section>
 
   <div class="actions">
     <p class="hint">💾 Tus datos se guardan en tu cuenta y se sincronizan en todos tus dispositivos al iniciar sesión.</p>
@@ -717,13 +791,22 @@
 <script>
   "use strict";
 
-  // ---------- Recargo de la tarjeta sobre la TRM ----------
-  const MARKUP = 0.5; // porcentaje (+0,50%)
-  const effFrom = (base) => base * (1 + MARKUP/100);
+  // ---------- Categorías de gasto ----------
+  const CATEGORIAS = [
+    { id:"comida",     nombre:"Comida",          emoji:"🍔", color:"#e0796a" },
+    { id:"transporte", nombre:"Transporte",      emoji:"🚗", color:"#e0b357" },
+    { id:"hogar",      nombre:"Hogar y servicios",emoji:"🏠", color:"#5fc59b" },
+    { id:"compras",    nombre:"Compras",         emoji:"🛍️", color:"#7aa2f7" },
+    { id:"salud",      nombre:"Salud",           emoji:"💊", color:"#bb9af7" },
+    { id:"ocio",       nombre:"Ocio y diversión",emoji:"🎉", color:"#f7768e" },
+    { id:"educacion",  nombre:"Educación",       emoji:"📚", color:"#7dcfff" },
+    { id:"otros",      nombre:"Otros",           emoji:"📦", color:"#9aa0ad" }
+  ];
+  const catById = (id) => CATEGORIAS.find(c => c.id === id) || CATEGORIAS[CATEGORIAS.length-1];
 
   // ---------- Almacenamiento seguro (con try/catch por si el navegador lo bloquea) ----------
-  const KEY = "gastos_tc_v1";
-  const KEY_CUPO = "gastos_tc_cupo_v1";
+  const KEY = "gastos_app_v2";
+  const KEY_BUDGET = "gastos_app_budget_v2";
   const KEY_TRM = "gastos_tc_trm_v1";
 
   function load(key, fallback){
@@ -735,9 +818,10 @@
     catch(e){ /* modo solo-sesión si el almacenamiento está bloqueado */ }
   }
 
-  let rows = load(KEY, []);            // [{id, desc, usd, trm, cop, cuotas, fecha}]
-  let cupo = load(KEY_CUPO, null);
+  let rows = load(KEY, []);            // [{id, desc, cat, usd, cop, trm, fecha}]
+  let budget = load(KEY_BUDGET, { ingreso:null, objetivo:null, moneda:"COP" });
   let trm  = load(KEY_TRM, { value:null, date:null });
+
 
   // ======================================================================
   //  CONFIGURACIÓN — edita SOLO las líneas marcadas abajo
@@ -809,7 +893,7 @@
       acts.innerHTML = '<button class="btn-logout" id="btnLogoutDenied" style="margin-top:8px">Cerrar sesión</button>';
       document.getElementById('btnLogoutDenied').addEventListener('click', doLogout);
     } else {
-      txt.textContent = "¿Te gustó la app? Actívala para guardar tus datos y usarla en todos tus dispositivos. Realiza el pago y escríbeme por WhatsApp; te habilito en minutos.";
+      txt.textContent = "Al activar tu acceso, todo lo que registres queda guardado en tu cuenta y disponible desde cualquier dispositivo: entras con tu correo desde el celular o el computador y tus gastos están ahí, siempre. Realiza el pago y escríbeme por WhatsApp; te habilito en minutos.";
       myRow.style.display = "none";
       acts.innerHTML = '<button class="gate-back" id="btnBackDemo">← Volver a la prueba</button>';
       document.getElementById('btnBackDemo').addEventListener('click', ()=> showOnly(appWrap));
@@ -845,21 +929,21 @@
   //  En modo demo NO se guarda nada (ni local ni nube): es solo prueba.
   function cloudWrite(){
     if(demoMode || !userRef) return;
-    try{ userRef.set({ rows, cupo:(cupo==null?null:cupo), updatedAt:Date.now() }); }
+    try{ userRef.set({ rows, budget, updatedAt:Date.now() }); }
     catch(e){ console.warn("Error guardando:", e); }
   }
   function persist(){ if(!demoMode) save(KEY, rows); cloudWrite(); }
-  function persistCupo(){ if(!demoMode) save(KEY_CUPO, cupo); cloudWrite(); }
+  function persistBudget(){ if(!demoMode) save(KEY_BUDGET, budget); cloudWrite(); }
 
   // ---------- Modo DEMO (sin login, sin guardar) ----------
   function startDemo(){
     demoMode = true;
     currentUser = null; userRef = null;
-    rows = []; cupo = null;
+    rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
     document.getElementById('demoBanner').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
-    if(fCupo) fCupo.value = "";
+    fillBudgetInputs();
     showOnly(appWrap);
     renderTrm(); render(); fetchTRM();
   }
@@ -890,12 +974,12 @@
       const data = snap.val();
       if(data && Array.isArray(data.rows)){
         rows = data.rows || [];
-        cupo = (data.cupo==null?null:data.cupo);
-        save(KEY, rows); save(KEY_CUPO, cupo);
-        fCupo.value = cupo ? cupo : "";
+        budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
+        save(KEY, rows); save(KEY_BUDGET, budget);
       } else {
-        rows = []; cupo = null; fCupo.value = "";
+        rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
       }
+      fillBudgetInputs();
       render();
     });
 
@@ -957,20 +1041,18 @@
   const trmDateEl  = document.getElementById('trmDate');
   const trmDotEl   = document.getElementById('trmDot');
   const trmEffEl   = document.getElementById('trmEff');
-  const fTrm       = document.getElementById('fTrm');
 
   function renderTrm(){
     if(trm.value){
       trmValueEl.textContent = fmtNum.format(trm.value);
       trmDateEl.textContent = trm.date ? ("Vigente: " + trm.date) : "—";
       trmDotEl.className = "dot live";
-      trmEffEl.textContent = "aplicada (+0,50%): " + fmtNum.format(effFrom(trm.value)) + " COP/USD";
-      if(!fTrm.value) fTrm.value = trm.value;
+      trmEffEl.textContent = "Banco de la República · oficial";
     } else {
       trmValueEl.textContent = "—";
       trmDateEl.textContent = "Sin datos";
       trmDotEl.className = "dot err";
-      trmEffEl.textContent = "aplicada (+0,50%): —";
+      trmEffEl.textContent = "—";
     }
     updateRateLine();
   }
@@ -990,8 +1072,8 @@
       const d = (data[0].vigenciadesde || "").slice(0,10);
       trm = { value: v, date: d };
       save(KEY_TRM, trm);
-      fTrm.value = v;
       renderTrm();
+      recalc(lastEdited);
     }catch(err){
       // Falla la API → dejamos el valor guardado o pedimos manual
       if(trm.value){ renderTrm(); }
@@ -1013,44 +1095,38 @@
       const today = new Date().toISOString().slice(0,10);
       trm = { value:v, date: today + " (manual)" };
       save(KEY_TRM, trm);
-      fTrm.value = v;
       renderTrm();
+      recalc(lastEdited);
     }
   });
 
-  // ---------- Cupo ----------
-  const fCupo     = document.getElementById('fCupo');
-  const cupoStat  = document.getElementById('cupoStat');
-  const cupoLeft  = document.getElementById('cupoLeft');
-  const cupoSub   = document.getElementById('cupoSub');
-  if(cupo) fCupo.value = cupo;
+  // ---------- Refs del formulario y presupuesto ----------
+  const fDesc      = document.getElementById('fDesc');
+  const fUsd       = document.getElementById('fUsd');
+  const fCop       = document.getElementById('fCop');
+  const fCategoria = document.getElementById('fCategoria');
+  const fFecha     = document.getElementById('fFecha');
+  const rateLine   = document.getElementById('rateLine');
+  const rateInfo   = document.getElementById('rateInfo');
+  const btnAdd     = document.getElementById('btnAdd');
+  const editBanner = document.getElementById('editBanner');
 
-  fCupo.addEventListener('input', ()=>{
-    const v = parseFloat(fCupo.value);
-    cupo = (!isNaN(v) && v > 0) ? v : null;
-    persistCupo();
-    render();
-  });
+  const fIngreso   = document.getElementById('fIngreso');
+  const fObjetivo  = document.getElementById('fObjetivo');
+  const fMoneda    = document.getElementById('fMoneda');
 
-  // ---------- Agregar / eliminar ----------
-  const fDesc   = document.getElementById('fDesc');
-  const fUsd    = document.getElementById('fUsd');
-  const fCop    = document.getElementById('fCop');
-  const fCuotas = document.getElementById('fCuotas');
-  const fFecha  = document.getElementById('fFecha');
-  const rateLine= document.getElementById('rateLine');
-  const btnAdd    = document.getElementById('btnAdd');
-  const editBanner= document.getElementById('editBanner');
+  let editingId = null;
+  let lastEdited = 'cop'; // por defecto la gente escribe en pesos
 
-  let editingId = null; // id de la compra que se está editando (null = nueva)
+  // Llena el desplegable de categorías
+  fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+c.emoji+' '+c.nombre+'</option>').join('');
 
-  // Fecha local de hoy en formato YYYY-MM-DD (respeta la zona horaria de Colombia)
+  // ---------- Fechas ----------
   function todayISO(){
     const d = new Date();
     const local = new Date(d.getTime() - d.getTimezoneOffset()*60000);
     return local.toISOString().slice(0,10);
   }
-  // Muestra la fecha bonita; soporta filas antiguas que guardaban texto
   function fmtFecha(v){
     if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
       const [y,m,da] = v.split('-').map(Number);
@@ -1060,88 +1136,82 @@
   }
   fFecha.value = todayISO();
 
-  let lastEdited = 'usd'; // cuál campo escribió el usuario de último
-
-  function currentBase(){
-    const v = parseFloat(fTrm.value);
-    return (!isNaN(v) && v > 0) ? v : (trm.value || 0);
+  // ---------- Presupuesto: cargar inputs y escuchar cambios ----------
+  function fillBudgetInputs(){
+    fIngreso.value  = budget.ingreso != null ? budget.ingreso : "";
+    fObjetivo.value = budget.objetivo != null ? budget.objetivo : "";
+    fMoneda.value   = budget.moneda || "COP";
   }
+  fillBudgetInputs();
 
+  fIngreso.addEventListener('input', ()=>{
+    const v = parseFloat(fIngreso.value);
+    budget.ingreso = (!isNaN(v) && v >= 0) ? v : null;
+    persistBudget(); render();
+  });
+  fObjetivo.addEventListener('input', ()=>{
+    const v = parseFloat(fObjetivo.value);
+    budget.objetivo = (!isNaN(v) && v >= 0) ? v : null;
+    persistBudget(); render();
+  });
+  fMoneda.addEventListener('change', ()=>{
+    budget.moneda = fMoneda.value;
+    persistBudget(); render();
+  });
+
+  // ---------- Conversión COP <-> USD con la TRM del día (sin recargo) ----------
   function updateRateLine(){
-    const base = currentBase();
-    if(!base){ rateLine.innerHTML = '<span class="tag">+0,50%</span> Tasa aplicada: —'; return; }
-    const eff = effFrom(base);
-    rateLine.innerHTML = '<span class="tag">+0,50%</span> Tasa aplicada: TRM <b>' +
-      fmtNum.format(base) + '</b> + 0,50% = <b>' + fmtNum.format(eff) + '</b> COP/USD';
+    if(!trm.value){ rateInfo.textContent = "TRM no disponible — usa “editar” en la tarjeta de arriba"; return; }
+    rateInfo.textContent = "1 USD = " + fmtNum.format(trm.value) + " COP";
   }
-
   function recalc(source){
-    const base = currentBase();
-    if(!base) return;
+    const t = trm.value || 0;
+    if(!t) return;
     if(source === 'usd'){
-      // USD → COP: con recargo (+0,50%)
       const u = parseFloat(fUsd.value);
-      fCop.value = (!isNaN(u) && u > 0) ? Math.round(u * effFrom(base)) : '';
+      fCop.value = (!isNaN(u) && u > 0) ? Math.round(u * t) : '';
     } else {
-      // COP → USD: TRM pura, sin recargo
       const c = parseFloat(fCop.value);
-      fUsd.value = (!isNaN(c) && c > 0) ? (c / base).toFixed(2) : '';
+      fUsd.value = (!isNaN(c) && c > 0) ? (c / t).toFixed(2) : '';
     }
   }
-
   fUsd.addEventListener('input', ()=>{ lastEdited = 'usd'; recalc('usd'); });
   fCop.addEventListener('input', ()=>{ lastEdited = 'cop'; recalc('cop'); });
-  fTrm.addEventListener('input', ()=>{ updateRateLine(); recalc(lastEdited); });
 
+  // ---------- Agregar / editar gasto ----------
   function addRow(){
-    const desc   = fDesc.value.trim();
-    const base   = currentBase();
-    const cuotas = Math.max(1, parseInt(fCuotas.value) || 1);
-
+    const desc = fDesc.value.trim();
+    const t    = trm.value || 0;
+    const cat  = fCategoria.value || "otros";
     if(!desc){ fDesc.focus(); return; }
-    if(!base || base <= 0){
-      alert("No hay TRM disponible. Usa el botón “editar” para escribirla manualmente.");
-      return;
-    }
-    const eff = effFrom(base);
-    let usd, cop, markup;
+    if(!t || t <= 0){ alert("No hay TRM disponible. Usa “editar” en la tarjeta de la TRM, arriba."); return; }
 
-    if(lastEdited === 'cop'){
-      // Escribió pesos → dólares con TRM pura (sin recargo)
-      cop = parseFloat(fCop.value);
-      if(isNaN(cop) || cop <= 0){ fCop.focus(); return; }
-      usd = cop / base;
-      markup = 0;
-    } else {
-      // Escribió dólares → pesos con recargo (+0,50%)
+    let usd, cop;
+    if(lastEdited === 'usd'){
       usd = parseFloat(fUsd.value);
       if(isNaN(usd) || usd <= 0){ fUsd.focus(); return; }
-      cop = usd * eff;
-      markup = MARKUP;
+      cop = usd * t;
+    } else {
+      cop = parseFloat(fCop.value);
+      if(isNaN(cop) || cop <= 0){ fCop.focus(); return; }
+      usd = cop / t;
     }
 
     if(editingId){
-      // Actualiza la compra existente conservando su id
       const idx = rows.findIndex(x => x.id === editingId);
-      if(idx >= 0){
-        rows[idx] = { ...rows[idx], desc, usd, cop, trm: base, markup, cuotas, fecha: fFecha.value || todayISO() };
-      }
+      if(idx >= 0) rows[idx] = { ...rows[idx], desc, cat, usd, cop, trm:t, fecha: fFecha.value || todayISO() };
       finishEdit();
     } else {
       rows.push({
         id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-        desc, usd, cop,
-        trm: base,
-        markup,
-        cuotas,
+        desc, cat, usd, cop, trm:t,
         fecha: fFecha.value || todayISO()
       });
     }
     persist();
-
-    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotas.value = "1";
+    fDesc.value = ""; fUsd.value = ""; fCop.value = "";
     fFecha.value = todayISO();
-    lastEdited = 'usd';
+    lastEdited = 'cop';
     fDesc.focus();
     render();
   }
@@ -1150,35 +1220,28 @@
     const r = rows.find(x => x.id === id);
     if(!r) return;
     editingId = id;
-    fDesc.value   = r.desc;
-    fTrm.value    = r.trm;
-    fCuotas.value = r.cuotas;
-    fFecha.value  = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
-    fUsd.value    = r.usd.toFixed(2);
-    fCop.value    = Math.round(r.cop);
-    // El sentido se deduce del recargo guardado (con recargo = entró por USD)
-    lastEdited = (r.markup && r.markup > 0) ? 'usd' : 'cop';
-    updateRateLine();
+    fDesc.value = r.desc;
+    fCategoria.value = r.cat || "otros";
+    fFecha.value = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
+    fCop.value = Math.round(r.cop);
+    fUsd.value = (r.usd != null ? r.usd : (r.trm ? r.cop / r.trm : 0)).toFixed(2);
+    lastEdited = 'cop';
     btnAdd.textContent = 'Guardar cambios';
     editBanner.style.display = '';
     document.querySelector('.panel').scrollIntoView({ behavior:'smooth', block:'start' });
     fDesc.focus();
   }
-
   function finishEdit(){
     editingId = null;
     btnAdd.textContent = 'Agregar';
     editBanner.style.display = 'none';
   }
-
   function cancelEdit(){
     finishEdit();
-    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotas.value = "1";
+    fDesc.value = ""; fUsd.value = ""; fCop.value = "";
     fFecha.value = todayISO();
-    lastEdited = 'usd';
-    updateRateLine();
+    lastEdited = 'cop';
   }
-
   document.getElementById('btnCancel').addEventListener('click', cancelEdit);
 
   function delRow(id){
@@ -1189,13 +1252,13 @@
   }
 
   document.getElementById('btnAdd').addEventListener('click', addRow);
-  [fDesc, fUsd, fCop, fTrm, fCuotas, fFecha].forEach(el=>{
+  [fDesc, fUsd, fCop, fFecha].forEach(el=>{
     el.addEventListener('keydown', e=>{ if(e.key === 'Enter') addRow(); });
   });
 
   // ---------- Reset ----------
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    if(rows.length === 0 || confirm("¿Seguro que quieres borrar TODAS las compras registradas? Esta acción no se puede deshacer.")){
+    if(rows.length === 0 || confirm("¿Seguro que quieres borrar TODOS los gastos registrados? Esta acción no se puede deshacer.")){
       rows = [];
       persist();
       render();
@@ -1205,11 +1268,11 @@
   // ---------- Exportar / Importar respaldo ----------
   document.getElementById('btnExport').addEventListener('click', ()=>{
     const backup = {
-      app: "control-gastos-tc",
-      version: 1,
+      app: "control-gastos",
+      version: 2,
       exportadoEl: new Date().toISOString(),
       rows: rows,
-      cupo: cupo
+      budget: budget
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type:"application/json" });
     const url = URL.createObjectURL(blob);
@@ -1233,12 +1296,12 @@
         const data = JSON.parse(reader.result);
         if(!data || !Array.isArray(data.rows)) throw new Error("formato");
         const msg = rows.length
-          ? "¿Reemplazar las compras actuales por las del respaldo? (" + data.rows.length + " compras)"
-          : "Importar " + data.rows.length + " compras del respaldo?";
+          ? "¿Reemplazar los gastos actuales por los del respaldo? (" + data.rows.length + " gastos)"
+          : "¿Importar " + data.rows.length + " gastos del respaldo?";
         if(!confirm(msg)) { fileImport.value = ""; return; }
         rows = data.rows;
-        cupo = (data.cupo == null ? null : data.cupo);
-        fCupo.value = cupo ? cupo : "";
+        budget = data.budget || { ingreso:null, objetivo:null, moneda:"COP" };
+        fillBudgetInputs();
         persist();      // guarda local y sube a la nube si estás conectado
         render();
         alert("Respaldo importado correctamente.");
@@ -1255,29 +1318,33 @@
   const tfoot  = document.getElementById('tfoot');
 
   function render(){
+    const moneda = budget.moneda || "COP";
+    const t = trm.value || 0;
+    // Monto de cada fila en la moneda elegida
+    const amt = (r) => moneda === "USD" ? (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))
+                                        : (r.cop != null ? r.cop : 0);
+    const fmtMon = (v) => moneda === "USD" ? fmtUSD.format(v) : fmtCOP.format(v);
+
     // Tabla
     if(rows.length === 0){
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty">
-        <div class="big">Aún no hay compras</div>
-        <div>Agrega tu primera compra arriba para empezar a llevar el control.</div>
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty">
+        <div class="big">Aún no hay gastos</div>
+        <div>Registra tu primer gasto arriba para empezar a llevar el control.</div>
       </div></td></tr>`;
       tfoot.innerHTML = "";
     } else {
-      tbody.innerHTML = rows.map(r=>{
-        const cuotaVal = r.cop / r.cuotas;
-        const eff = r.trm * (1 + (r.markup || 0)/100);
+      // Más recientes primero
+      const ordered = rows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+      tbody.innerHTML = ordered.map(r=>{
+        const c = catById(r.cat);
         return `<tr>
           <td>
             <div class="desc">${escapeHtml(r.desc)}</div>
             <div class="date">${fmtFecha(r.fecha)}</div>
           </td>
-          <td class="r mono usd">${fmtUSD.format(r.usd)}</td>
-          <td class="r trm-cell mono">${fmtNum.format(eff)}<div class="sub-rate">TRM ${fmtNum.format(r.trm)}</div></td>
+          <td><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span></td>
           <td class="r mono cop">${fmtCOP.format(r.cop)}</td>
-          <td class="c">
-            <span class="cuota-pill">${r.cuotas}x</span>
-            <div class="cuota-val">${fmtCOP.format(cuotaVal)}/mes</div>
-          </td>
+          <td class="r mono usd">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
           <td class="c"><div class="row-actions">
             <button class="edit" title="Editar" data-id="${r.id}">✎</button>
             <button class="del" title="Eliminar" data-id="${r.id}">✕</button>
@@ -1285,46 +1352,91 @@
         </tr>`;
       }).join("");
 
-      const totUsd   = rows.reduce((s,r)=> s + r.usd, 0);
-      const totCop   = rows.reduce((s,r)=> s + r.cop, 0);
+      const totCop = rows.reduce((s,r)=> s + (r.cop||0), 0);
+      const totUsd = rows.reduce((s,r)=> s + (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)), 0);
       tfoot.innerHTML = `<tr>
         <td class="tlabel">Total</td>
-        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
         <td></td>
         <td class="r mono cop">${fmtCOP.format(totCop)}</td>
-        <td></td><td></td>
+        <td class="r mono usd">${fmtUSD.format(totUsd)}</td>
+        <td></td>
       </tr>`;
 
-      tbody.querySelectorAll('.del').forEach(b=>{
-        b.addEventListener('click', ()=> delRow(b.dataset.id));
-      });
-      tbody.querySelectorAll('.edit').forEach(b=>{
-        b.addEventListener('click', ()=> startEdit(b.dataset.id));
-      });
+      tbody.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=> delRow(b.dataset.id)));
+      tbody.querySelectorAll('.edit').forEach(b=> b.addEventListener('click', ()=> startEdit(b.dataset.id)));
     }
 
-    // Stats
-    const totUsd   = rows.reduce((s,r)=> s + r.usd, 0);
-    const totCop   = rows.reduce((s,r)=> s + r.cop, 0);
-    const totCuota = rows.reduce((s,r)=> s + (r.cop / r.cuotas), 0);
+    // ---- Totales en la moneda elegida ----
+    const gastado = rows.reduce((s,r)=> s + amt(r), 0);
+    document.getElementById('stGastado').textContent = fmtMon(gastado);
+    document.getElementById('countSub').textContent =
+      rows.length + (rows.length === 1 ? " gasto registrado" : " gastos registrados");
 
-    document.getElementById('totalCop').textContent   = fmtCOP.format(totCop);
-    document.getElementById('totalUsd').textContent   = fmtUSD.format(totUsd);
-    document.getElementById('totalCuota').textContent = fmtCOP.format(totCuota);
-    document.getElementById('countSub').textContent   =
-      rows.length + (rows.length === 1 ? " compra registrada" : " compras registradas");
-
-    // Cupo
-    if(cupo){
-      const left = cupo - totCop;
-      cupoStat.style.display = "";
-      cupoLeft.textContent = fmtCOP.format(left);
-      cupoLeft.className = "v " + (left < 0 ? "red" : "green");
-      const pct = Math.max(0, Math.min(100, (totCop / cupo) * 100));
-      cupoSub.textContent = `usado ${pct.toFixed(0)}% de ${fmtCOP.format(cupo)}`;
+    // ---- Objetivo de gasto + barra ----
+    const objEl = document.getElementById('stObjetivo');
+    const objBar = document.getElementById('objBar');
+    const objSub = document.getElementById('objSub');
+    if(budget.objetivo){
+      const restante = budget.objetivo - gastado;
+      const pct = Math.max(0, Math.min(100, (gastado / budget.objetivo) * 100));
+      objEl.textContent = fmtMon(Math.abs(restante)) ;
+      if(restante >= 0){
+        objEl.className = "v green";
+        objSub.textContent = `te quedan de tu objetivo de ${fmtMon(budget.objetivo)} (${pct.toFixed(0)}% usado)`;
+      } else {
+        objEl.className = "v red";
+        objSub.textContent = `¡te pasaste ${fmtMon(Math.abs(restante))} del objetivo de ${fmtMon(budget.objetivo)}!`;
+      }
+      objBar.style.width = pct + "%";
+      objBar.className = "progress-bar" + (pct >= 100 ? " over" : pct >= 80 ? " warn" : "");
     } else {
-      cupoStat.style.display = "none";
+      objEl.textContent = "—"; objEl.className = "v green";
+      objSub.textContent = "define tu objetivo arriba";
+      objBar.style.width = "0%"; objBar.className = "progress-bar";
     }
+
+    // ---- Ahorro estimado (ingreso - gastos) ----
+    const ahoEl = document.getElementById('stAhorro');
+    const ahoSub = document.getElementById('ahorroSub');
+    if(budget.ingreso){
+      const ahorro = budget.ingreso - gastado;
+      ahoEl.textContent = fmtMon(ahorro);
+      ahoEl.className = "v " + (ahorro < 0 ? "red" : "green");
+      const pctG = Math.min(100, (gastado / budget.ingreso) * 100);
+      ahoSub.textContent = ahorro >= 0
+        ? `has gastado ${pctG.toFixed(0)}% de tu ingreso`
+        : `gastaste más de lo que ingresaste`;
+    } else {
+      ahoEl.textContent = "—"; ahoEl.className = "v amber";
+      ahoSub.textContent = "ingresa tu sueldo arriba para verlo";
+    }
+
+    // ---- Resumen por categorías ----
+    renderCategorias(gastado, fmtMon);
+  }
+
+  function renderCategorias(total, fmtMon){
+    const cont = document.getElementById('catRows');
+    const box  = document.getElementById('catSummary');
+    if(!rows.length || total <= 0){ box.style.display = "none"; return; }
+    const moneda = budget.moneda || "COP";
+    const amt = (r) => moneda === "USD" ? (r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0)) : (r.cop||0);
+    // Suma por categoría
+    const sums = {};
+    rows.forEach(r=>{ const k = r.cat || "otros"; sums[k] = (sums[k]||0) + amt(r); });
+    const arr = Object.entries(sums).map(([k,v])=> ({ cat:catById(k), val:v }))
+                  .sort((a,b)=> b.val - a.val);
+    box.style.display = "";
+    cont.innerHTML = arr.map(({cat,val})=>{
+      const pct = (val/total)*100;
+      return `<div class="cat-row">
+        <div class="cat-top">
+          <span class="cat-name">${cat.emoji} ${cat.nombre}</span>
+          <span class="cat-amt">${fmtMon(val)} · ${pct.toFixed(0)}%</span>
+        </div>
+        <div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${cat.color}"></div></div>
+      </div>`;
+    }).join("");
   }
 
   function escapeHtml(s){
