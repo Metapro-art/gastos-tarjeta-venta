@@ -30,8 +30,8 @@
     --line:       #282c38;
     --line-soft:  #20232c;
     --text:       #ece8df;
-    --text-dim:   #9aa0ad;
-    --text-faint: #646b78;
+    --text-dim:   #b3b9c5;
+    --text-faint: #8b92a0;
     --gold:       #e0b357;
     --gold-soft:  #c9a04a;
     --emerald:    #5fc59b;
@@ -132,7 +132,7 @@
   .stat .v.usd{ color:var(--gold); }
   .stat .v.green{ color:var(--emerald); }
   .stat .v.red{ color:var(--rose); }
-  .stat .sub{ font-size:12px; color:var(--text-faint); margin-top:6px; }
+  .stat .sub{ font-size:13px; color:var(--text-faint); margin-top:6px; }
   .stat .v.amber{ color:var(--gold); }
 
   /* ---------- Barra de progreso del objetivo ---------- */
@@ -219,7 +219,7 @@
     border:1px solid rgba(224,179,87,.28); border-radius:999px;
     padding:2px 9px; font-size:11px; font-weight:600;
   }
-  .sub-rate{ font-size:11px; color:var(--text-faint); margin-top:2px; }
+  .sub-rate{ font-size:12.5px; color:var(--text-dim); margin-top:2px; }
   .trm-eff{ font-size:12px; color:var(--emerald); margin-top:5px; font-family:'JetBrains Mono', monospace; }
   .field label{ font-size:12px; letter-spacing:.06em; color:var(--text-dim); font-weight:600; }
   .field input{
@@ -267,7 +267,7 @@
   tbody tr:hover{ background:var(--surface-2); }
   tbody tr:last-child td{ border-bottom:none; }
   .desc{ font-weight:500; }
-  .date{ font-size:12px; color:var(--text-faint); margin-top:2px; }
+  .date{ font-size:13px; color:var(--text-dim); margin-top:3px; }
   .mono{ font-family:'JetBrains Mono', monospace; font-weight:500; }
   .usd{ color:var(--gold); }
   .cop{ color:var(--text); }
@@ -277,7 +277,7 @@
     border:1px solid rgba(95,197,155,.28); border-radius:999px;
     padding:3px 11px; font-size:13px; font-weight:600; font-family:'JetBrains Mono',monospace;
   }
-  .cuota-val{ font-size:12px; color:var(--text-faint); margin-top:3px; font-family:'JetBrains Mono',monospace; }
+  .cuota-val{ font-size:13px; color:var(--text-dim); margin-top:3px; font-family:'JetBrains Mono',monospace; }
   .del{
     background:none; border:1px solid var(--line); color:var(--text-faint);
     width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:15px;
@@ -322,6 +322,8 @@
     position:fixed; inset:0; z-index:50;
     display:flex; align-items:center; justify-content:center;
     padding:24px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
     background:
       radial-gradient(1100px 600px at 78% -8%, rgba(224,179,87,.12), transparent 60%),
       radial-gradient(900px 500px at -8% 12%, rgba(95,197,155,.08), transparent 55%),
@@ -331,6 +333,7 @@
     background:linear-gradient(180deg, var(--surface), var(--ink-2));
     border:1px solid var(--line); border-radius:22px;
     padding:clamp(28px,5vw,44px); max-width:440px; width:100%;
+    margin:auto;
     box-shadow:var(--shadow); text-align:center;
   }
   .gate-card .eyebrow{
@@ -351,7 +354,7 @@
   }
   .btn-google:hover{ filter:brightness(.97); transform:translateY(-1px); }
   .btn-google svg{ width:20px; height:20px; }
-  .gate-foot{ margin-top:22px; font-size:12.5px; color:var(--text-faint); line-height:1.6; }
+  .gate-foot{ margin-top:22px; font-size:13px; color:var(--text-dim); line-height:1.6; }
   .gate-status{ margin-top:16px; font-size:13px; color:var(--text-dim); min-height:18px; }
 
   .denied .ico{ font-size:42px; margin-bottom:8px; }
@@ -438,7 +441,7 @@
   .btn-wa:hover{ filter:brightness(1.04); transform:translateY(-1px); }
   .btn-wa svg{ width:20px; height:20px; }
   .disclaimer{
-    font-size:11px; color:var(--text-faint); line-height:1.55;
+    font-size:12px; color:var(--text-dim); line-height:1.6;
     margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft);
   }
   .gate-back{
@@ -457,7 +460,7 @@
   .userbar img{ width:34px; height:34px; border-radius:50%; }
   .userbar .uinfo{ flex:1; min-width:0; }
   .userbar .uname{ font-weight:600; font-size:14px; }
-  .userbar .umail{ font-size:12px; color:var(--text-faint); word-break:break-all; }
+  .userbar .umail{ font-size:13px; color:var(--text-dim); word-break:break-all; }
   .userbar .badge-admin{
     background:rgba(224,179,87,.14); color:var(--gold); border:1px solid rgba(224,179,87,.3);
     border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700; letter-spacing:.04em;
@@ -614,6 +617,18 @@
     h1{ font-size:30px; }
     .gate{ padding:14px; }
     .gate-card{ padding:24px 20px; }
+    /* Bienvenida más compacta para que entre en pantalla */
+    #gateWelcome .gate-card h1{ font-size:clamp(28px,7vw,34px); margin-bottom:10px; }
+    #gateWelcome .gate-card > p{ font-size:15px; margin-bottom:18px; }
+    .gate-card .eyebrow{ margin-bottom:10px; font-size:11px; }
+    .gate-feats{ margin:14px 0 4px; gap:8px; }
+    .gate-feats li{ font-size:12.5px; padding:10px 12px 10px 40px; }
+    .gate-feats li::before{ left:12px; }
+    .gate-actions{ gap:10px; }
+    .btn-try{ padding:13px 20px; font-size:15px; }
+    .btn-have{ padding:12px 20px; font-size:14px; }
+    .price-line{ font-size:12px; padding:9px 12px; }
+    .gate-foot{ margin-top:16px; font-size:12px; }
     /* Formulario de gasto: todo en una columna en pantallas muy pequeñas */
     .form-grid{ grid-template-columns:1fr; }
     .panel{ padding:18px; }
@@ -625,6 +640,10 @@
     .userbar .btn-logout{ padding:8px 12px; font-size:12px; }
     .demo-banner{ flex-direction:column; align-items:stretch; }
     .demo-banner button{ width:100%; }
+    /* Legibilidad: en móvil los textos pequeños no bajan de 13px */
+    .date, .cuota-val, .sub-rate, .stat .sub, .userbar .umail,
+    .cc-sub, .hint, .cat-row .cat-amt, .markup-check .hint-mk{ font-size:13px !important; }
+    .cat-row .cat-top{ font-size:14px; }
   }
 
   /* La tabla siempre se puede deslizar de lado en móvil sin romper el layout */
@@ -679,6 +698,17 @@
   }
   .btn-install:hover{ border-color:var(--gold-soft); color:var(--gold); }
 
+  /* ---------- Toast (aviso flotante) ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(180deg, var(--surface-2), var(--surface));
+    border:1px solid var(--gold-soft); color:var(--text);
+    border-radius:12px; padding:13px 20px; font-size:14px; font-weight:600;
+    box-shadow:var(--shadow); z-index:80; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s; max-width:90vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
   /* ---------- Pestañas de navegación (Gastos / Tarjeta) ---------- */
   .nav-tabs{
     display:flex; gap:8px; margin-bottom:26px;
@@ -731,7 +761,7 @@
   }
   .markup-check input{ width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
   .markup-check b{ color:var(--gold); }
-  .markup-check .hint-mk{ font-size:12px; color:var(--text-faint); }
+  .markup-check .hint-mk{ font-size:12.5px; color:var(--text-dim); }
 </style>
 </head>
 <body>
@@ -921,9 +951,22 @@
         <label for="fFecha">Fecha</label>
         <input type="date" id="fFecha" class="num" />
       </div>
+      <div class="field">
+        <label for="fPago">Pagué con</label>
+        <select id="fPago" class="num">
+          <option value="efectivo">💵 Efectivo</option>
+          <option value="debito">💳 Débito</option>
+          <option value="credito">💳 Tarjeta de crédito</option>
+        </select>
+      </div>
+      <div class="field" id="fieldCuotasGasto" style="display:none">
+        <label for="fCuotasGasto">Cuotas</label>
+        <input type="number" id="fCuotasGasto" class="num" placeholder="1" step="1" min="1" value="1" />
+      </div>
       <button class="btn-add" id="btnAdd">Agregar</button>
     </div>
     <div class="rate-line" id="rateLine">💱 Se convierte automáticamente con la TRM del día: <b id="rateInfo">—</b></div>
+    <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Al pagar con tarjeta de crédito, este gasto también se guardará en tu sección <b>“Mi tarjeta”</b>.</div>
   </section>
 
   <div class="table-card">
@@ -1050,6 +1093,9 @@
   </div>
 
 </div>
+
+<!-- Toast (aviso flotante) -->
+<div class="toast" id="toast"></div>
 
 <!-- ===== Modal: instalar como app en el celular ===== -->
 <div class="modal-overlay" id="installModal">
@@ -1452,6 +1498,10 @@
   const fCop       = document.getElementById('fCop');
   const fCategoria = document.getElementById('fCategoria');
   const fFecha     = document.getElementById('fFecha');
+  const fPago      = document.getElementById('fPago');
+  const fCuotasGasto = document.getElementById('fCuotasGasto');
+  const fieldCuotasGasto = document.getElementById('fieldCuotasGasto');
+  const creditoNote = document.getElementById('creditoNote');
   const rateLine   = document.getElementById('rateLine');
   const rateInfo   = document.getElementById('rateInfo');
   const btnAdd     = document.getElementById('btnAdd');
@@ -1466,6 +1516,14 @@
 
   // Llena el desplegable de categorías
   fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+c.emoji+' '+c.nombre+'</option>').join('');
+
+  // Muestra/oculta el campo de cuotas y el aviso según el método de pago
+  function toggleCreditoUI(){
+    const esCredito = fPago.value === 'credito';
+    fieldCuotasGasto.style.display = esCredito ? "" : "none";
+    creditoNote.style.display = esCredito ? "" : "none";
+  }
+  fPago.addEventListener('change', toggleCreditoUI);
 
   // ---------- Fechas ----------
   function todayISO(){
@@ -1529,6 +1587,7 @@
     const desc = fDesc.value.trim();
     const t    = trm.value || 0;
     const cat  = fCategoria.value || "otros";
+    const pago = fPago.value || "efectivo";
     if(!desc){ fDesc.focus(); return; }
     if(!t || t <= 0){ alert("No hay TRM disponible. Usa “editar” en la tarjeta de la TRM, arriba."); return; }
 
@@ -1542,21 +1601,35 @@
       if(isNaN(cop) || cop <= 0){ fCop.focus(); return; }
       usd = cop / t;
     }
+    const fecha = fFecha.value || todayISO();
 
     if(editingId){
       const idx = rows.findIndex(x => x.id === editingId);
-      if(idx >= 0) rows[idx] = { ...rows[idx], desc, cat, usd, cop, trm:t, fecha: fFecha.value || todayISO() };
+      if(idx >= 0) rows[idx] = { ...rows[idx], desc, cat, usd, cop, trm:t, pago, fecha };
       finishEdit();
+      persist();
     } else {
       rows.push({
         id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-        desc, cat, usd, cop, trm:t,
-        fecha: fFecha.value || todayISO()
+        desc, cat, usd, cop, trm:t, pago, fecha
       });
+      persist();
+      // Si se pagó con tarjeta de crédito, copiar a "Mi tarjeta" (registro independiente)
+      if(pago === 'credito'){
+        const cuotas = Math.max(1, parseInt(fCuotasGasto.value) || 1);
+        ccRows.push({
+          id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+          desc, usd, cop, trm:t, cuotas, markup:0,
+          fecha
+        });
+        persistCC();
+        renderCC();
+        showToast("💳 También se agregó a “Mi tarjeta”");
+      }
     }
-    persist();
-    fDesc.value = ""; fUsd.value = ""; fCop.value = "";
+    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
     fFecha.value = todayISO();
+    fPago.value = "efectivo"; toggleCreditoUI();
     lastEdited = 'cop';
     fDesc.focus();
     render();
@@ -1571,6 +1644,7 @@
     fFecha.value = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) ? r.fecha : todayISO();
     fCop.value = Math.round(r.cop);
     fUsd.value = (r.usd != null ? r.usd : (r.trm ? r.cop / r.trm : 0)).toFixed(2);
+    fPago.value = r.pago || "efectivo"; toggleCreditoUI();
     lastEdited = 'cop';
     btnAdd.textContent = 'Guardar cambios';
     editBanner.style.display = '';
@@ -1584,8 +1658,9 @@
   }
   function cancelEdit(){
     finishEdit();
-    fDesc.value = ""; fUsd.value = ""; fCop.value = "";
+    fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
     fFecha.value = todayISO();
+    fPago.value = "efectivo"; toggleCreditoUI();
     lastEdited = 'cop';
   }
   document.getElementById('btnCancel').addEventListener('click', cancelEdit);
@@ -1684,10 +1759,11 @@
       const ordered = rows.slice().sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
       tbody.innerHTML = ordered.map(r=>{
         const c = catById(r.cat);
+        const pagoLbl = r.pago === 'credito' ? '💳 Crédito' : r.pago === 'debito' ? '💳 Débito' : r.pago === 'efectivo' ? '💵 Efectivo' : '';
         return `<tr>
           <td>
             <div class="desc">${escapeHtml(r.desc)}</div>
-            <div class="date">${fmtFecha(r.fecha)}</div>
+            <div class="date">${fmtFecha(r.fecha)}${pagoLbl ? ' · ' + pagoLbl : ''}</div>
           </td>
           <td><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span></td>
           <td class="r mono cop">${fmtCOP.format(r.cop)}</td>
@@ -2017,6 +2093,17 @@
     return String(s).replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
     }[c]));
+  }
+
+  // Aviso flotante temporal
+  let toastTimer = null;
+  function showToast(msg){
+    const el = document.getElementById('toast');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> el.classList.remove('show'), 3000);
   }
 
   // El arranque ahora lo controla la sesión (onAuthStateChanged → startApp).
