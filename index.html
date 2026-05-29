@@ -853,6 +853,18 @@
   .cat-name-input:focus{ outline:none; border-color:var(--gold-soft); }
   .cat-name-input:disabled{ opacity:.55; cursor:not-allowed; }
   .cat-fixed-badge{ font-size:11px; color:var(--text-faint); margin-left:auto; white-space:nowrap; }
+  .cat-del-btn{
+    flex:0 0 auto; margin-left:auto; background:none; border:1px solid var(--line);
+    border-radius:9px; width:38px; height:38px; font-size:16px; cursor:pointer;
+    color:var(--text-faint); transition:all .16s; padding:0;
+  }
+  .cat-del-btn:hover{ border-color:var(--rose); color:var(--rose); background:rgba(247,118,142,.08); }
+  .cat-add-btn{
+    width:100%; margin-top:6px; background:rgba(224,179,87,.12); border:1px dashed var(--gold-soft);
+    color:var(--gold); border-radius:12px; padding:14px; cursor:pointer;
+    font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:700; transition:all .16s;
+  }
+  .cat-add-btn:hover{ background:rgba(224,179,87,.2); border-style:solid; }
   .cat-subs{ margin-top:11px; padding-left:4px; display:flex; flex-direction:column; gap:7px; }
   .sub-chip{
     display:flex; align-items:center; gap:8px; background:var(--surface-2);
@@ -1746,6 +1758,7 @@
           ${c.editable ? `<button class="cat-emoji-btn ${c.emoji?'':'no-emoji'}" data-emoji-for="${c.id}">${c.emoji || '∅'}</button>` : `<div class="cat-emoji-btn" style="cursor:default">${c.emoji}</div>`}
           <input class="cat-name-input" data-name-for="${c.id}" value="${escapeHtml(c.nombre)}" ${c.editable?'':'disabled'} maxlength="28" />
           ${c.editable ? '' : '<span class="cat-fixed-badge">automática</span>'}
+          ${(c.editable && c.id !== 'otros') ? `<button class="cat-del-btn" data-del-cat="${c.id}" title="Eliminar categoría">🗑️</button>` : ''}
         </div>
         ${c.editable ? `<div class="emoji-pop" data-pop="${c.id}"><button class="emoji-none" data-pick="${c.id}" data-emoji="">∅ Sin emoji</button>${EMOJIS_DISPONIBLES.map(e=>`<button data-pick="${c.id}" data-emoji="${e}">${e}</button>`).join("")}</div>` : ''}
         ${c.editable ? `
@@ -1761,6 +1774,12 @@
       `;
       cont.appendChild(item);
     });
+    // Botón "+ Nueva categoría" al final
+    const addBtn = document.createElement('button');
+    addBtn.className = "cat-add-btn";
+    addBtn.id = "btnAddCat";
+    addBtn.innerHTML = "➕ Crear nueva categoría";
+    cont.appendChild(addBtn);
     bindCatsEvents();
   }
   function bindCatsEvents(){
@@ -1833,6 +1852,63 @@
         if(box) box.style.display = '';
       });
     });
+    // Borrar categoría completa
+    cont.querySelectorAll('[data-del-cat]').forEach(btn=>{
+      btn.addEventListener('click', ()=> borrarCategoria(btn.dataset.delCat));
+    });
+    // Crear categoría nueva
+    const addBtn = document.getElementById('btnAddCat');
+    if(addBtn) addBtn.addEventListener('click', crearCategoriaNueva);
+  }
+
+  // Cuenta cuántos gastos usan una categoría
+  function contarGastosDeCategoria(id){
+    return rows.filter(r=> (r.cat||"") === id).length;
+  }
+
+  // Borra una categoría. Sus gastos pasan a "Otros". Pide confirmación si tiene gastos.
+  function borrarCategoria(id){
+    if(CATS_FIJAS.includes(id) || id === 'otros') return; // protegidas
+    const cat = catById(id);
+    const nombre = cat ? cat.nombre : "esta categoría";
+    const n = contarGastosDeCategoria(id);
+    let msg = '¿Eliminar la categoría "' + nombre + '"?';
+    if(n > 0) msg += '\n\nTiene ' + n + (n===1?' gasto registrado que pasará':' gastos registrados que pasarán') + ' a la categoría "Otros". No se perderá ningún gasto.';
+    if(!confirm(msg)) return;
+    // Mover los gastos de esa categoría a "otros"
+    if(n > 0){
+      rows.forEach(r=>{ if((r.cat||"") === id){ r.cat = 'otros'; r.subcat = ''; } });
+      persist();
+    }
+    // Marcar/borrar la categoría
+    if(id.startsWith("cat_")){
+      delete catCustom[id]; // las nuevas se eliminan del todo
+    } else {
+      ensureCatCustom(id)._deleted = true; // las base se marcan como borradas
+    }
+    refreshCategorias(); persistCats(); fillCategoriaSelect(); render(); renderCC();
+    renderCatsList();
+    showToast("🗑️ Categoría eliminada");
+  }
+
+  // Crea una categoría nueva con nombre y emoji
+  function crearCategoriaNueva(){
+    const nombre = prompt("Nombre de la nueva categoría:");
+    if(nombre === null) return; // canceló
+    const limpio = nombre.trim();
+    if(!limpio){ return; }
+    // Evitar duplicados por nombre
+    if(getCategorias().some(c=> c.nombre.toLowerCase() === limpio.toLowerCase())){
+      alert("Ya existe una categoría con ese nombre.");
+      return;
+    }
+    const id = "cat_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+    const colores = COLORES_CAT;
+    const color = colores[getCategorias().length % colores.length];
+    catCustom[id] = { nombre: limpio, emoji: "🏷️", color: color, subs: [] };
+    refreshCategorias(); persistCats(); fillCategoriaSelect(); render(); renderCC();
+    renderCatsList();
+    showToast("✅ Categoría “" + limpio + "” creada");
   }
   (function(){
     const modal = document.getElementById('catsModal');
@@ -1862,19 +1938,43 @@
     { id:"tarjeta",    nombre:"Tarjeta de crédito", emoji:"💳", color:"#c9a04a", editable:false },
     { id:"abono",      nombre:"Abono tarjeta de crédito", emoji:"✅", color:"#5fc59b", editable:false }
   ];
+  // Paleta de colores para asignar a categorías nuevas
+  const COLORES_CAT = ["#e0796a","#e0b357","#5fc59b","#7aa2f7","#bb9af7","#f7768e","#7dcfff","#9aa0ad","#f4a261","#2a9d8f","#e76f51","#a8dadc"];
+  // IDs de las categorías fijas que nunca se borran ni se renombran
+  const CATS_FIJAS = ["tarjeta","abono"];
+
   // Devuelve la lista de categorías aplicando la personalización del usuario
+  // (incluye categorías base no borradas + categorías nuevas creadas por el usuario)
   function getCategorias(){
-    return CATEGORIAS_BASE.map(base=>{
+    const lista = [];
+    // 1) Categorías base (saltando las que el usuario marcó como borradas)
+    CATEGORIAS_BASE.forEach(base=>{
       const cust = catCustom[base.id] || {};
-      // emoji: si el usuario lo definió (aunque sea "" = sin emoji) se respeta; si no, se usa el base
+      if(cust._deleted) return; // el usuario la borró
       const emoji = (cust.emoji !== undefined && cust.emoji !== null) ? cust.emoji : base.emoji;
-      return {
+      lista.push({
         ...base,
         nombre: (cust.nombre != null && cust.nombre !== "") ? cust.nombre : base.nombre,
         emoji:  emoji,
         subs:   Array.isArray(cust.subs) ? cust.subs : []
-      };
+      });
     });
+    // 2) Categorías nuevas del usuario (id que empieza por "cat_")
+    Object.keys(catCustom).forEach(id=>{
+      if(!id.startsWith("cat_")) return;
+      const c = catCustom[id];
+      if(!c || c._deleted) return;
+      lista.push({
+        id: id,
+        nombre: c.nombre || "Categoría",
+        emoji: (c.emoji !== undefined && c.emoji !== null) ? c.emoji : "🏷️",
+        color: c.color || "#9aa0ad",
+        editable: true,
+        esNueva: true,
+        subs: Array.isArray(c.subs) ? c.subs : []
+      });
+    });
+    return lista;
   }
   // Para compatibilidad con el resto del código
   let CATEGORIAS = getCategorias();
@@ -2410,9 +2510,9 @@
   // Ordena una lista de registros según el criterio elegido
   function sortRecords(arr, criterio){
     const a = arr.slice();
-    // índice de cada categoría según el orden de la lista base (para agrupar de forma lógica)
+    // índice de cada categoría según el orden actual (base + nuevas) para agrupar de forma lógica
     const catOrden = {};
-    CATEGORIAS_BASE.forEach((c,i)=> catOrden[c.id] = i);
+    getCategorias().forEach((c,i)=> catOrden[c.id] = i);
     switch(criterio){
       case 'fecha-asc':  a.sort((x,y)=> String(x.fecha).localeCompare(String(y.fecha))); break;
       case 'valor-desc': a.sort((x,y)=> (y.cop||0) - (x.cop||0)); break;
