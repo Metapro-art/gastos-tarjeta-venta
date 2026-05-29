@@ -604,10 +604,10 @@
   }
   .refer-more:hover{ filter:brightness(1.15); }
   /* Label con enlace a la derecha (Categoría + Crear/editar) */
-  .label-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .label-row{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
   .cat-edit-link{
     background:none; border:none; color:#7aa2f7; cursor:pointer;
-    font-family:'Hanken Grotesk',sans-serif; font-size:12px; font-weight:600;
+    font-family:'Hanken Grotesk',sans-serif; font-size:11px; font-weight:600;
     padding:0; text-decoration:underline; white-space:nowrap;
   }
   .cat-edit-link:hover{ filter:brightness(1.2); }
@@ -856,6 +856,11 @@
     background:var(--ink); font-size:19px; cursor:pointer; padding:0;
   }
   .emoji-pop button:hover{ border-color:var(--gold-soft); }
+  .emoji-pop .emoji-none{
+    width:auto; padding:0 12px; font-size:12px; font-weight:600; color:var(--text-dim);
+    font-family:'Hanken Grotesk',sans-serif;
+  }
+  .cat-emoji-btn.no-emoji{ color:var(--text-faint); font-size:16px; }
   @media (max-width:480px){
     .cats-modal{ max-width:100%; }
   }
@@ -1214,7 +1219,7 @@
         <input type="text" id="fDesc" placeholder="Ej: Mercado, Uber, cine, cuenta de luz…" />
       </div>
       <div class="field">
-        <label for="fCategoria" class="label-row">Categoría <button type="button" class="cat-edit-link" id="catsLink">✏️ Crear o editar</button></label>
+        <label for="fCategoria" class="label-row">Categoría <button type="button" class="cat-edit-link" id="catsLink">✏️ Crear o editar categoría</button></label>
         <select id="fCategoria" class="num"></select>
       </div>
       <div class="field" id="fSubcatField" style="display:none">
@@ -1623,11 +1628,11 @@
       ).join("");
       item.innerHTML = `
         <div class="cat-item-head">
-          ${c.editable ? `<button class="cat-emoji-btn" data-emoji-for="${c.id}">${c.emoji}</button>` : `<div class="cat-emoji-btn" style="cursor:default">${c.emoji}</div>`}
+          ${c.editable ? `<button class="cat-emoji-btn ${c.emoji?'':'no-emoji'}" data-emoji-for="${c.id}">${c.emoji || '∅'}</button>` : `<div class="cat-emoji-btn" style="cursor:default">${c.emoji}</div>`}
           <input class="cat-name-input" data-name-for="${c.id}" value="${escapeHtml(c.nombre)}" ${c.editable?'':'disabled'} maxlength="28" />
           ${c.editable ? '' : '<span class="cat-fixed-badge">automática</span>'}
         </div>
-        ${c.editable ? `<div class="emoji-pop" data-pop="${c.id}">${EMOJIS_DISPONIBLES.map(e=>`<button data-pick="${c.id}" data-emoji="${e}">${e}</button>`).join("")}</div>` : ''}
+        ${c.editable ? `<div class="emoji-pop" data-pop="${c.id}"><button class="emoji-none" data-pick="${c.id}" data-emoji="">∅ Sin emoji</button>${EMOJIS_DISPONIBLES.map(e=>`<button data-pick="${c.id}" data-emoji="${e}">${e}</button>`).join("")}</div>` : ''}
         ${c.editable ? `
         <button class="subs-toggle" data-toggle-subs="${c.id}">${subs.length ? `Ver/editar subcategorías (${subs.length})` : '+ Añadir subcategorías'}</button>
         <div class="cat-subs" data-subs="${c.id}" style="display:none">
@@ -1746,10 +1751,12 @@
   function getCategorias(){
     return CATEGORIAS_BASE.map(base=>{
       const cust = catCustom[base.id] || {};
+      // emoji: si el usuario lo definió (aunque sea "" = sin emoji) se respeta; si no, se usa el base
+      const emoji = (cust.emoji !== undefined && cust.emoji !== null) ? cust.emoji : base.emoji;
       return {
         ...base,
         nombre: (cust.nombre != null && cust.nombre !== "") ? cust.nombre : base.nombre,
-        emoji:  (cust.emoji  != null && cust.emoji  !== "") ? cust.emoji  : base.emoji,
+        emoji:  emoji,
         subs:   Array.isArray(cust.subs) ? cust.subs : []
       };
     });
@@ -1758,6 +1765,8 @@
   let CATEGORIAS = getCategorias();
   function refreshCategorias(){ CATEGORIAS = getCategorias(); }
   const catById = (id) => CATEGORIAS.find(c => c.id === id) || CATEGORIAS.find(c=>c.id==="otros");
+  // Etiqueta "emoji nombre" — sin espacio sobrante si la categoría no tiene emoji
+  function catLabel(c){ return (c.emoji ? c.emoji + ' ' : '') + c.nombre; }
 
   function persistCats(){
     if(!demoMode) save(KEY_CATS, catCustom);
@@ -2164,7 +2173,7 @@
   // Llena el desplegable de categorías (excluye las del sistema: tarjeta/abono se asignan solas)
   function fillCategoriaSelect(){
     const prev = fCategoria.value;
-    fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+c.emoji+' '+escapeHtml(c.nombre)+'</option>').join('');
+    fCategoria.innerHTML = CATEGORIAS.map(c => '<option value="'+c.id+'">'+escapeHtml(catLabel(c))+'</option>').join('');
     if(prev && CATEGORIAS.some(c=>c.id===prev)) fCategoria.value = prev;
     fillSubcatSelect();
   }
@@ -2526,7 +2535,7 @@
     const filasG = rows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(r=>{
       const c = catById(r.cat);
       const pago = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='efectivo'?'Efectivo':'';
-      return `<tr><td>${fmtFecha(r.fecha)}</td><td>${escapeHtml(r.desc)}</td><td>${c.emoji} ${c.nombre}</td><td>${pago}</td><td class="r">${fmtP(r.cop)}</td><td class="r">${fmtU(r.usd)}</td></tr>`;
+      return `<tr><td>${fmtFecha(r.fecha)}</td><td>${escapeHtml(r.desc)}</td><td>${escapeHtml(catLabel(c))}</td><td>${pago}</td><td class="r">${fmtP(r.cop)}</td><td class="r">${fmtU(r.usd)}</td></tr>`;
     }).join("");
     const totCop = rows.reduce((s,r)=>s+(r.cop||0),0);
     const filasCC = ccRows.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).map(r=>
@@ -2654,9 +2663,9 @@
           <td>
             <div class="desc">${escapeHtml(r.desc)}</div>
             <div class="date">${fmtFecha(r.fecha)}${pagoLbl ? ' · ' + pagoLbl : ''}</div>
-            <div class="cat-inline" style="color:${c.color}">${c.emoji} ${c.nombre}${subPill}</div>
+            <div class="cat-inline" style="color:${c.color}">${escapeHtml(catLabel(c))}${subPill}</div>
           </td>
-          <td class="cat-col"><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${c.emoji} ${c.nombre}</span>${subPill}</td>
+          <td class="cat-col"><span class="cat-pill" style="color:${c.color};border-color:${c.color}55;background:${c.color}1a">${escapeHtml(catLabel(c))}</span>${subPill}</td>
           <td class="r mono cop">${fmtCOP.format(r.cop)}${mk}<small class="usd-sub">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</small></td>
           <td class="r mono usd usd-col">${fmtUSD.format(r.usd != null ? r.usd : (r.trm ? r.cop/r.trm : 0))}</td>
           <td class="c"><div class="row-actions">
@@ -2758,7 +2767,7 @@
       const pct = (val/total)*100;
       return `<div class="cat-row">
         <div class="cat-top">
-          <span class="cat-name">${cat.emoji} ${cat.nombre}</span>
+          <span class="cat-name">${escapeHtml(catLabel(cat))}</span>
           <span class="cat-amt">${fmtMon(val)} · ${pct.toFixed(0)}%</span>
         </div>
         <div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${cat.color}"></div></div>
