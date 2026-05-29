@@ -717,9 +717,14 @@
   }
   .nav-tabs button{
     flex:1; background:transparent; border:none; color:var(--text-dim);
-    border-radius:10px; padding:13px 16px; font-family:'Hanken Grotesk',sans-serif;
+    border-radius:10px; padding:13px 12px; font-family:'Hanken Grotesk',sans-serif;
     font-size:15px; font-weight:600; cursor:pointer; transition:all .18s;
-    display:flex; align-items:center; justify-content:center; gap:8px;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    line-height:1.25; text-align:center;
+  }
+  @media (max-width:480px){
+    .nav-tabs{ padding:5px; gap:5px; }
+    .nav-tabs button{ font-size:13.5px; padding:11px 8px; }
   }
   .nav-tabs button.active{
     background:linear-gradient(180deg, var(--gold), var(--gold-soft));
@@ -881,7 +886,7 @@
 
   <nav class="nav-tabs">
     <button id="navGastos" class="active">📊 Gastos del mes</button>
-    <button id="navTarjeta">💳 Mi tarjeta</button>
+    <button id="navTarjeta">💳 Mi tarjeta de crédito</button>
   </nav>
 
   <!-- ========================= VISTA: GASTOS DEL MES ========================= -->
@@ -966,7 +971,7 @@
       <button class="btn-add" id="btnAdd">Agregar</button>
     </div>
     <div class="rate-line" id="rateLine">💱 Se convierte automáticamente con la TRM del día: <b id="rateInfo">—</b></div>
-    <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Al pagar con tarjeta de crédito, este gasto también se guardará en tu sección <b>“Mi tarjeta”</b>.</div>
+    <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Al pagar con tarjeta de crédito, este gasto también se guardará en tu sección <b>“Mi tarjeta de crédito”</b>.</div>
   </section>
 
   <div class="table-card">
@@ -1624,7 +1629,7 @@
         });
         persistCC();
         renderCC();
-        showToast("💳 También se agregó a “Mi tarjeta”");
+        showToast("💳 También se agregó a “Mi tarjeta de crédito”");
       }
     }
     fDesc.value = ""; fUsd.value = ""; fCop.value = ""; fCuotasGasto.value = "1";
