@@ -101,6 +101,7 @@
     font-family:'JetBrains Mono', monospace;
     font-size:27px; font-weight:600; color:var(--gold);
     margin-top:8px; display:flex; align-items:baseline; gap:6px;
+    text-shadow:0 0 16px rgba(224,179,87,.22);
   }
   .trm-value .cur{ font-size:13px; color:var(--text-dim); }
   .trm-meta{ font-size:12px; color:var(--text-faint); margin-top:4px; display:flex; gap:10px; align-items:center; }
@@ -349,9 +350,10 @@
   .gate-card .eyebrow{
     font-size:12px; letter-spacing:.32em; text-transform:uppercase;
     color:var(--gold); font-weight:600; margin-bottom:14px;
+    text-shadow:0 0 14px rgba(224,179,87,.35);
   }
   .gate-card h1{ font-family:'Fraunces',serif; font-weight:500; font-size:clamp(26px,6vw,38px); line-height:1.05; margin-bottom:14px; }
-  .gate-card h1 em{ font-style:italic; color:var(--gold); }
+  .gate-card h1 em{ font-style:italic; color:var(--gold); text-shadow:0 0 20px rgba(224,179,87,.3); }
   .gate-card p{ color:var(--text-dim); font-size:15px; line-height:1.55; margin-bottom:26px; }
   /* Bienvenida: encabezado más fuerte */
   #gateWelcome .gate-card h1{ font-size:clamp(34px,8vw,48px); margin-bottom:16px; }
@@ -395,9 +397,10 @@
     background:linear-gradient(180deg, var(--gold), var(--gold-soft)); color:#1a1404;
     border:none; border-radius:12px; padding:15px 24px;
     font-family:'Hanken Grotesk',sans-serif; font-size:16px; font-weight:700;
-    cursor:pointer; transition:transform .12s, filter .18s; width:100%;
+    cursor:pointer; transition:transform .12s, filter .18s, box-shadow .18s; width:100%;
+    box-shadow:0 0 22px -8px rgba(224,179,87,.45);
   }
-  .btn-try:hover{ filter:brightness(1.07); transform:translateY(-1px); }
+  .btn-try:hover{ filter:brightness(1.07); transform:translateY(-1px); box-shadow:0 0 28px -6px rgba(224,179,87,.6); }
   .btn-have{
     display:inline-flex; align-items:center; gap:10px; justify-content:center;
     background:transparent; color:var(--text-dim); border:1px solid var(--line);
@@ -1000,6 +1003,7 @@
   .nav-tabs button.active{
     background:linear-gradient(180deg, var(--gold), var(--gold-soft));
     color:#1a1404; font-weight:700;
+    box-shadow:0 0 18px -4px rgba(224,179,87,.35);
   }
   .view{ display:none; }
   .view.active{ display:block; }
