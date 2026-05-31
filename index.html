@@ -189,6 +189,51 @@
   .gastos-titulo{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0; display:flex; align-items:center; gap:9px; }
   .gastos-section .sort-bar{ margin-bottom:14px; }
   .gastos-section .table-card{ margin-bottom:0; border:1px solid var(--line-soft); }
+  /* Sección de gastos fijos (recurrentes) */
+  .recur-section{
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:18px; padding:22px; margin-bottom:28px;
+  }
+  .recur-titulo{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0; display:flex; align-items:center; gap:9px; }
+  .recur-desc{ font-size:13px; color:var(--text-dim); line-height:1.55; margin-bottom:16px; }
+  .recur-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .recur-list:empty{ margin-bottom:0; }
+  .recur-item{
+    display:flex; align-items:center; gap:12px;
+    background:var(--ink); border:1px solid var(--line-soft); border-radius:12px; padding:12px 14px;
+  }
+  .recur-item .ri-info{ flex:1; min-width:0; }
+  .recur-item .ri-desc{ font-weight:600; font-size:14.5px; color:var(--text); display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .recur-item .ri-meta{ font-size:12px; color:var(--text-faint); margin-top:2px; }
+  .recur-item .ri-amt{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--gold); font-size:14px; }
+  .recur-item .ri-actions{ display:flex; gap:7px; flex:0 0 auto; }
+  .recur-item .ri-add{
+    background:linear-gradient(180deg, var(--emerald), #4daf88); color:#06281d; border:none;
+    border-radius:9px; padding:8px 14px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px; font-weight:700;
+    white-space:nowrap; transition:filter .15s;
+  }
+  .recur-item .ri-add:hover{ filter:brightness(1.08); }
+  .recur-item .ri-del{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:14px; transition:all .15s; flex:0 0 auto;
+  }
+  .recur-item .ri-del:hover{ border-color:var(--rose); color:var(--rose); }
+  .recur-empty{ font-size:13px; color:var(--text-faint); padding:6px 2px 14px; }
+  .recur-add-btn{
+    width:100%; background:rgba(224,179,87,.1); border:1px dashed var(--gold-soft);
+    color:var(--gold); border-radius:12px; padding:13px; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:14px; font-weight:700; transition:all .16s;
+  }
+  .recur-add-btn:hover{ background:rgba(224,179,87,.18); border-style:solid; }
+  /* Formulario del modal de gasto fijo */
+  .recur-form{ display:flex; flex-direction:column; gap:14px; margin-bottom:18px; }
+  .rf-field{ display:flex; flex-direction:column; gap:7px; }
+  .rf-field label{ font-size:13px; color:var(--text-dim); font-weight:600; }
+  .rf-field input, .rf-field select{
+    background:var(--ink); border:1px solid var(--line); border-radius:10px;
+    padding:12px 13px; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; width:100%;
+  }
+  .rf-field input:focus, .rf-field select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
   .cat-row{ margin-bottom:14px; }
   .cat-row:last-child{ margin-bottom:0; }
   .cat-row .cat-top{ display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; }
@@ -1372,6 +1417,18 @@
     </div><!-- /sec-body -->
   </section>
 
+  <section class="recur-section" id="seccionRecur">
+    <button class="sec-toggle" data-collapse="seccionRecur" style="margin-bottom:4px">
+      <h2 class="recur-titulo"><span>🔁</span> Gastos fijos</h2>
+      <span class="sec-chevron">▲</span>
+    </button>
+    <div class="sec-body">
+      <div class="recur-desc">Crea aquí tus pagos que se repiten cada mes (gimnasio, celular, servicios, suscripciones). Cuando los pagues, agrégalos a tus gastos con un toque.</div>
+      <div class="recur-list" id="recurList"></div>
+      <button class="recur-add-btn" id="btnAddRecur">➕ Crear gasto fijo</button>
+    </div>
+  </section>
+
   <section class="gastos-section" id="seccionGastos">
     <button class="sec-toggle" data-collapse="seccionGastos" style="margin-bottom:4px">
       <h2 class="gastos-titulo"><span>🧾</span> Mis gastos</h2>
@@ -1640,6 +1697,39 @@
       <p>Al activar tu acceso e iniciar sesión, aceptas esta política de privacidad y autorizas el tratamiento de tus datos en los términos aquí descritos.</p>
     </div>
     <button class="modal-close" id="closePrivacy">Entendido</button>
+  </div>
+</div>
+
+<!-- ===== Modal: crear gasto fijo (recurrente) ===== -->
+<div class="modal-overlay" id="recurModal">
+  <div class="modal">
+    <h3>🔁 Nuevo gasto fijo</h3>
+    <div class="msub">Crea una plantilla para un pago que se repite cada mes. Luego lo agregas a tus gastos con un toque.</div>
+    <div class="recur-form">
+      <div class="rf-field">
+        <label for="recurDesc">¿Qué pago es?</label>
+        <input type="text" id="recurDesc" placeholder="Ej: Gimnasio, Netflix, Celular…" maxlength="40" />
+      </div>
+      <div class="rf-field">
+        <label for="recurCop">Valor mensual (COP)</label>
+        <input type="number" id="recurCop" placeholder="Ej: 80.000" step="1" min="0" />
+      </div>
+      <div class="rf-field">
+        <label for="recurCat">Categoría</label>
+        <select id="recurCat"></select>
+      </div>
+      <div class="rf-field">
+        <label for="recurPago">Se paga con</label>
+        <select id="recurPago">
+          <option value="efectivo">💵 Efectivo</option>
+          <option value="debito">💳 Débito</option>
+          <option value="transferencia">🔄 Transferencia</option>
+          <option value="credito">💳 Tarjeta de crédito</option>
+        </select>
+      </div>
+    </div>
+    <button class="modal-close" id="recurSave">Guardar gasto fijo</button>
+    <button id="closeRecur" style="width:100%;margin-top:10px;background:none;border:1px solid var(--line);color:var(--text-dim);border-radius:11px;padding:12px;font-weight:600;font-family:'Inter',sans-serif;font-size:14px;cursor:pointer">Cancelar</button>
   </div>
 </div>
 
@@ -1982,6 +2072,94 @@
     renderCatsList();
     showToast("✅ Categoría “" + limpio + "” creada");
   }
+
+  // ====== Gastos fijos (recurrentes) ======
+  function renderRecurrentes(){
+    const cont = document.getElementById('recurList');
+    if(!cont) return;
+    if(!recurrentes.length){
+      cont.innerHTML = '<div class="recur-empty">Aún no has creado gastos fijos. Toca el botón de abajo para crear el primero.</div>';
+      return;
+    }
+    cont.innerHTML = recurrentes.map(r=>{
+      const c = catById(r.cat);
+      const pagoTxt = r.pago==='credito'?'Crédito':r.pago==='debito'?'Débito':r.pago==='transferencia'?'Transferencia':'Efectivo';
+      return `
+        <div class="recur-item">
+          <div class="ri-info">
+            <div class="ri-desc">${escapeHtml(r.desc)} <span class="ri-amt">${fmtCOP.format(r.cop)}</span></div>
+            <div class="ri-meta">${escapeHtml(catLabel(c))} · ${pagoTxt}</div>
+          </div>
+          <div class="ri-actions">
+            <button class="ri-add" data-recadd="${r.id}">Agregar</button>
+            <button class="ri-del" data-recdel="${r.id}" title="Eliminar gasto fijo">🗑️</button>
+          </div>
+        </div>`;
+    }).join("");
+    cont.querySelectorAll('[data-recadd]').forEach(b=> b.addEventListener('click', ()=> agregarRecurrente(b.dataset.recadd)));
+    cont.querySelectorAll('[data-recdel]').forEach(b=> b.addEventListener('click', ()=> borrarRecurrente(b.dataset.recdel)));
+  }
+
+  // Inserta una plantilla como gasto real (con la fecha de hoy)
+  function agregarRecurrente(id){
+    const r = recurrentes.find(x=> x.id === id);
+    if(!r) return;
+    const t = trm.value || 0;
+    const fecha = todayISO();
+    const datos = {
+      desc: r.desc, cat: r.cat, subcat: "",
+      usd: (t ? r.cop / t : 0), cop: r.cop, t: t,
+      pago: r.pago, markup: 0, fecha,
+      vinculaTarjeta: (r.pago === 'credito' && r.cat !== 'abono'),
+      esAbono: (r.cat === 'abono'),
+      aplicaRecargo: false
+    };
+    commitNuevoGasto(datos);
+    render();
+    showToast("✅ “" + r.desc + "” agregado a tus gastos");
+  }
+
+  function borrarRecurrente(id){
+    const r = recurrentes.find(x=> x.id === id);
+    if(!r) return;
+    if(!confirm('¿Eliminar el gasto fijo "' + r.desc + '"?\n\nEsto solo borra la plantilla; los gastos que ya agregaste se mantienen.')) return;
+    recurrentes = recurrentes.filter(x=> x.id !== id);
+    persistRecur(); renderRecurrentes();
+    showToast("🗑️ Gasto fijo eliminado");
+  }
+
+  // Lógica del modal para crear un gasto fijo
+  (function(){
+    const modal = document.getElementById('recurModal');
+    if(!modal) return;
+    const open = ()=>{
+      // llenar el selector de categorías del modal
+      const sel = document.getElementById('recurCat');
+      sel.innerHTML = CATEGORIAS.filter(c=> c.id!=='tarjeta' && c.id!=='abono').map(c=> '<option value="'+c.id+'">'+escapeHtml(catLabel(c))+'</option>').join('');
+      document.getElementById('recurDesc').value = "";
+      document.getElementById('recurCop').value = "";
+      document.getElementById('recurPago').value = "debito";
+      modal.classList.add('show');
+      setTimeout(()=> document.getElementById('recurDesc').focus(), 50);
+    };
+    const close = ()=> modal.classList.remove('show');
+    const btnAdd = document.getElementById('btnAddRecur');
+    if(btnAdd) btnAdd.addEventListener('click', open);
+    document.getElementById('closeRecur').addEventListener('click', close);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
+    document.getElementById('recurSave').addEventListener('click', ()=>{
+      const desc = document.getElementById('recurDesc').value.trim();
+      const cop = parseFloat(document.getElementById('recurCop').value);
+      const cat = document.getElementById('recurCat').value;
+      const pago = document.getElementById('recurPago').value;
+      if(!desc){ document.getElementById('recurDesc').focus(); return; }
+      if(isNaN(cop) || cop <= 0){ document.getElementById('recurCop').focus(); return; }
+      recurrentes.push({ id: "rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6), desc, cop, cat, pago });
+      persistRecur(); renderRecurrentes();
+      close();
+      showToast("✅ Gasto fijo “" + desc + "” creado");
+    });
+  })();
   (function(){
     const modal = document.getElementById('catsModal');
     const open = ()=>{ renderCatsList(); modal.classList.add('show'); };
@@ -1996,7 +2174,9 @@
 
   // ---------- Categorías de gasto ----------
   const KEY_CATS = "gastos_app_cats_v1";
+  const KEY_RECUR = "gastos_app_recur_v1";
   let catCustom = {};   // personalización del usuario { id:{nombre,emoji,subs:[]} } — se carga de localStorage más abajo
+  let recurrentes = []; // plantillas de gastos fijos [{id,desc,cop,cat,pago}] — se carga más abajo
   // Categorías base (el usuario puede renombrar/cambiar emoji de las editables y añadir subcategorías)
   const CATEGORIAS_BASE = [
     { id:"comida",     nombre:"Comida",          emoji:"🥗", color:"#e0796a", editable:true },
@@ -2059,6 +2239,10 @@
     if(!demoMode) save(KEY_CATS, catCustom);
     if(typeof cloudWrite === 'function') cloudWrite();
   }
+  function persistRecur(){
+    if(!demoMode) save(KEY_RECUR, recurrentes);
+    if(typeof cloudWrite === 'function') cloudWrite();
+  }
 
   // ---------- Almacenamiento seguro (con try/catch por si el navegador lo bloquea) ----------
   const KEY = "gastos_app_v2";
@@ -2086,6 +2270,7 @@
   let cupo = load(KEY_CUPO, null);     // cupo total de la tarjeta
   let ccPagos = load(KEY_CCPAY, []);   // pagos/abonos [{id, monto, fecha}]
   catCustom = load(KEY_CATS, {});      // ahora sí cargamos la personalización guardada
+  recurrentes = load(KEY_RECUR, []);   // plantillas de gastos fijos
   refreshCategorias();
 
 
@@ -2240,7 +2425,7 @@
   //  En modo demo NO se guarda nada (ni local ni nube): es solo prueba.
   function cloudWrite(){
     if(demoMode || !userRef) return;
-    try{ userRef.set({ rows, budget, ccRows, cupo:(cupo==null?null:cupo), ccPagos, catCustom, updatedAt:Date.now() }); }
+    try{ userRef.set({ rows, budget, ccRows, cupo:(cupo==null?null:cupo), ccPagos, catCustom, recurrentes, updatedAt:Date.now() }); }
     catch(e){ console.warn("Error guardando:", e); }
   }
   function persist(){ if(!demoMode) save(KEY, rows); cloudWrite(); }
@@ -2253,13 +2438,13 @@
     currentUser = null; userRef = null;
     rows = []; budget = { ingreso:null, objetivo:null, moneda:"COP" };
     ccRows = []; cupo = null; ccPagos = [];
-    catCustom = {}; refreshCategorias();
+    catCustom = {}; recurrentes = []; refreshCategorias();
     document.getElementById('demoPrice').style.display = "";
     document.getElementById('userbar').style.display = "none";
     document.getElementById('adminPanel').style.display = "none";
     fillBudgetInputs(); fillCupoInput(); fillCategoriaSelect();
     showOnly(appWrap);
-    renderTrm(); render(); renderCC(); fetchTRM();
+    renderTrm(); render(); renderCC(); renderRecurrentes(); fetchTRM();
   }
 
   // ---------- Autorización ----------
@@ -2292,14 +2477,15 @@
       cupo   = (data.cupo == null ? null : data.cupo);
       ccPagos = Array.isArray(data.ccPagos) ? data.ccPagos : [];
       catCustom = (data.catCustom && typeof data.catCustom === 'object') ? data.catCustom : {};
+      recurrentes = Array.isArray(data.recurrentes) ? data.recurrentes : [];
       refreshCategorias();
-      save(KEY, rows); save(KEY_BUDGET, budget); save(KEY_CC, ccRows); save(KEY_CUPO, cupo); save(KEY_CCPAY, ccPagos); save(KEY_CATS, catCustom);
+      save(KEY, rows); save(KEY_BUDGET, budget); save(KEY_CC, ccRows); save(KEY_CUPO, cupo); save(KEY_CCPAY, ccPagos); save(KEY_CATS, catCustom); save(KEY_RECUR, recurrentes);
       fillBudgetInputs(); fillCupoInput(); fillCategoriaSelect();
-      render(); renderCC();
+      render(); renderCC(); if(typeof renderRecurrentes==='function') renderRecurrentes();
     });
 
     showOnly(appWrap);
-    renderTrm(); render(); renderCC(); fetchTRM();
+    renderTrm(); render(); renderCC(); renderRecurrentes(); fetchTRM();
   }
 
   if(auth){
@@ -2572,6 +2758,7 @@
   }
   fCategoria.addEventListener('change', ()=> fillSubcatSelect());
   fillCategoriaSelect();
+  renderRecurrentes();
 
   // Muestra/oculta el campo de cuotas y el aviso según el método de pago
   function toggleCreditoUI(){
