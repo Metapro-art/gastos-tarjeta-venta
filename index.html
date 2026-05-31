@@ -134,6 +134,7 @@
   .stat .v.green{ color:var(--emerald); }
   .stat .v.red{ color:var(--rose); }
   .stat .sub{ font-size:13px; color:var(--text-faint); margin-top:6px; }
+  .stat .stat-tarjeta{ color:var(--gold); font-size:12px; margin-top:3px; opacity:.92; }
   .stat .v.amber{ color:var(--gold); }
 
   /* ---------- Barra de progreso del objetivo ---------- */
@@ -153,7 +154,7 @@
   .bfield input, .bfield select{
     background:var(--ink); border:1px solid var(--line); border-radius:11px;
     padding:12px 13px; color:var(--text); font-family:'JetBrains Mono',monospace;
-    font-size:15px; width:100%;
+    font-size:16px; width:100%;
   }
   .bfield select{ font-family:'Hanken Grotesk',sans-serif; cursor:pointer; }
   .bfield input:focus, .bfield select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
@@ -164,7 +165,7 @@
   .field select{
     background:var(--ink); border:1px solid var(--line); border-radius:11px;
     padding:13px 14px; color:var(--text); font-family:'Hanken Grotesk',sans-serif;
-    font-size:15px; width:100%; cursor:pointer;
+    font-size:16px; width:100%; cursor:pointer;
   }
   .field select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
 
@@ -231,7 +232,7 @@
   .rf-field label{ font-size:13px; color:var(--text-dim); font-weight:600; }
   .rf-field input, .rf-field select{
     background:var(--ink); border:1px solid var(--line); border-radius:10px;
-    padding:12px 13px; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; width:100%;
+    padding:12px 13px; color:var(--text); font-family:'Inter',sans-serif; font-size:16px; width:100%;
   }
   .rf-field input:focus, .rf-field select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
   .cat-row{ margin-bottom:14px; }
@@ -279,7 +280,7 @@
   .field input{
     background:var(--ink); border:1px solid var(--line);
     border-radius:11px; padding:13px 14px; color:var(--text);
-    font-family:'Hanken Grotesk', sans-serif; font-size:15px; width:100%;
+    font-family:'Hanken Grotesk', sans-serif; font-size:16px; width:100%;
     transition:border-color .18s, box-shadow .18s;
   }
   .field input.num{ font-family:'JetBrains Mono', monospace; }
@@ -573,7 +574,7 @@
   .admin h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin:0; color:var(--gold); }
   .admin-chevron{
     flex:0 0 auto; color:var(--gold); font-size:14px; transition:transform .25s ease;
-    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; display:flex; align-items:center; justify-content:center;
     border:1px solid rgba(224,179,87,.3); border-radius:9px;
   }
   .admin.collapsed .admin-chevron{ transform:rotate(180deg); }
@@ -594,7 +595,7 @@
   .sec-toggle > h2, .sec-toggle > h3{ margin:0; }
   .sec-chevron{
     flex:0 0 auto; color:var(--gold); font-size:13px; transition:transform .25s ease;
-    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; display:flex; align-items:center; justify-content:center;
     border:1px solid rgba(224,179,87,.3); border-radius:9px;
   }
   .is-collapsed .sec-chevron{ transform:rotate(180deg); }
@@ -1119,7 +1120,7 @@
   .cc-setup input{
     background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:9px;
     padding:9px 12px; color:var(--text); font-family:'JetBrains Mono',monospace;
-    font-size:14px; width:180px;
+    font-size:16px; width:180px;
   }
   .cc-setup input:focus{ outline:none; border-color:var(--gold-soft); }
 
@@ -1344,6 +1345,7 @@
       <div class="k">Gastado este mes</div>
       <div class="v cop" id="stGastado">$0</div>
       <div class="sub" id="countSub">0 gastos registrados</div>
+      <div class="sub stat-tarjeta" id="gastadoTarjetaSub" style="display:none"></div>
     </div>
     <div class="stat alt" id="stObjetivoCard">
       <div class="k">Objetivo de gasto</div>
@@ -3370,10 +3372,22 @@
     }
 
     // ---- Totales en la moneda elegida ----
+    // Toda compra a crédito (sea registrada en Gastos o en la pestaña Tarjeta) ya vive en `rows`,
+    // así que el total de gastos del mes YA la incluye. No hay que volver a sumar nada.
     const gastado = rows.reduce((s,r)=> s + amt(r), 0);
+    // Desglose: cuánto de ese total se gastó con la tarjeta de crédito (gastos a crédito).
+    const gastadoTarjeta = rows.filter(r => r.pago === 'credito').reduce((s,r)=> s + amt(r), 0);
     document.getElementById('stGastado').textContent = fmtMon(gastado);
     document.getElementById('countSub').textContent =
       rows.length + (rows.length === 1 ? " gasto registrado" : " gastos registrados");
+    // Desglose pequeñito: cuánto del total viene de la tarjeta de crédito
+    const tjSub = document.getElementById('gastadoTarjetaSub');
+    if(gastadoTarjeta > 0){
+      tjSub.style.display = "";
+      tjSub.textContent = "incluye " + fmtMon(gastadoTarjeta) + " en tarjeta de crédito";
+    } else {
+      tjSub.style.display = "none";
+    }
 
     // ---- Objetivo de gasto + barra ----
     const objEl = document.getElementById('stObjetivo');
