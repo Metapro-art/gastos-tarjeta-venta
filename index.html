@@ -180,7 +180,15 @@
     background:var(--surface); border:1px solid var(--line-soft);
     border-radius:18px; padding:22px; margin-bottom:28px;
   }
-  .cat-summary h3{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin-bottom:16px; }
+  .cat-summary h3{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0; }
+  /* Sección de gastos (tabla) plegable */
+  .gastos-section{
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-radius:18px; padding:22px; margin-bottom:28px;
+  }
+  .gastos-titulo{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0; display:flex; align-items:center; gap:9px; }
+  .gastos-section .sort-bar{ margin-bottom:14px; }
+  .gastos-section .table-card{ margin-bottom:0; border:1px solid var(--line-soft); }
   .cat-row{ margin-bottom:14px; }
   .cat-row:last-child{ margin-bottom:0; }
   .cat-row .cat-top{ display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; }
@@ -198,7 +206,7 @@
   }
   .panel h2{
     font-family:'Fraunces', serif; font-weight:500; font-size:20px;
-    margin-bottom:18px; display:flex; align-items:center; gap:10px;
+    margin:0; display:flex; align-items:center; gap:10px;
   }
   .panel h2 span{ color:var(--gold); font-size:14px; }
   .form-grid{
@@ -531,6 +539,26 @@
   }
   .admin.collapsed .admin-body{ max-height:0; opacity:0; margin-top:0; }
   .admin .desc{ font-size:13px; color:var(--text-dim); margin-bottom:16px; }
+
+  /* ===== Sistema de plegado genérico (para Nuevo gasto, tabla, resumen) ===== */
+  .sec-toggle{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    width:100%; background:none; border:none; cursor:pointer; padding:0; text-align:left;
+    color:inherit; font:inherit; margin:0;
+  }
+  .sec-toggle > h2, .sec-toggle > h3{ margin:0; }
+  .sec-chevron{
+    flex:0 0 auto; color:var(--gold); font-size:13px; transition:transform .25s ease;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(224,179,87,.3); border-radius:9px;
+  }
+  .is-collapsed .sec-chevron{ transform:rotate(180deg); }
+  .sec-body{
+    max-height:4000px; overflow:hidden;
+    transition:max-height .32s ease, opacity .25s ease, margin-top .25s ease;
+    opacity:1; margin-top:18px;
+  }
+  .is-collapsed .sec-body{ max-height:0; opacity:0; margin-top:0; }
   .admin-add{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
   .admin-add input{
     flex:1 1 240px; min-width:0; background:var(--ink); border:1px solid var(--line);
@@ -1285,8 +1313,12 @@
     </div>
   </section>
 
-  <section class="panel">
-    <h2><span>＋</span> Nuevo gasto</h2>
+  <section class="panel" id="panelNuevoGasto">
+    <button class="sec-toggle" data-collapse="panelNuevoGasto">
+      <h2><span>＋</span> Nuevo gasto</h2>
+      <span class="sec-chevron">▲</span>
+    </button>
+    <div class="sec-body">
     <div class="edit-banner" id="editBanner" style="display:none">
       ✎ Estás editando un gasto registrado.
       <button id="btnCancel">Cancelar edición</button>
@@ -1337,44 +1369,58 @@
       <span>Sumar <b>+0,50%</b> por compra en dólares <span class="hint-mk">(recargo al pagar en moneda extranjera; solo afecta la conversión USD → COP)</span></span>
     </label>
     <div class="rate-line" id="creditoNote" style="display:none;background:rgba(95,197,155,.08);border-color:rgba(95,197,155,.25)">💳 Este gasto también se guardará en <b>“Mi tarjeta de crédito”</b> y quedará vinculado: si lo editas o borras aquí, también cambia allá.</div>
+    </div><!-- /sec-body -->
   </section>
 
-  <div class="sort-bar">
-    <label for="sortGastos">↕ Ordenar por</label>
-    <select id="sortGastos">
-      <option value="fecha-desc">Más recientes</option>
-      <option value="fecha-asc">Más antiguos</option>
-      <option value="valor-desc">Mayor valor</option>
-      <option value="valor-asc">Menor valor</option>
-      <option value="categoria">Por categoría</option>
-    </select>
-  </div>
+  <section class="gastos-section" id="seccionGastos">
+    <button class="sec-toggle" data-collapse="seccionGastos" style="margin-bottom:4px">
+      <h2 class="gastos-titulo"><span>🧾</span> Mis gastos</h2>
+      <span class="sec-chevron">▲</span>
+    </button>
+    <div class="sec-body">
+    <div class="sort-bar">
+      <label for="sortGastos">↕ Ordenar por</label>
+      <select id="sortGastos">
+        <option value="fecha-desc">Más recientes</option>
+        <option value="fecha-asc">Más antiguos</option>
+        <option value="valor-desc">Mayor valor</option>
+        <option value="valor-asc">Menor valor</option>
+        <option value="categoria">Por categoría</option>
+      </select>
+    </div>
 
-  <div class="table-card">
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Gasto</th>
-            <th class="cat-col">Categoría</th>
-            <th class="r">COP</th>
-            <th class="r usd-col">USD</th>
-            <th class="c"></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-        <tfoot id="tfoot"></tfoot>
-      </table>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Gasto</th>
+              <th class="cat-col">Categoría</th>
+              <th class="r">COP</th>
+              <th class="r usd-col">USD</th>
+              <th class="c"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot id="tfoot"></tfoot>
+        </table>
+      </div>
+      <div class="ver-mas-wrap" id="verMasGastos" style="display:none">
+        <button class="btn-vermas" id="btnVerMasGastos">Ver más</button>
+        <button class="btn-vermas" id="btnVerMenosGastos" style="display:none">Ver menos</button>
+      </div>
     </div>
-    <div class="ver-mas-wrap" id="verMasGastos" style="display:none">
-      <button class="btn-vermas" id="btnVerMasGastos">Ver más</button>
-      <button class="btn-vermas" id="btnVerMenosGastos" style="display:none">Ver menos</button>
-    </div>
-  </div>
+    </div><!-- /sec-body -->
+  </section>
 
   <section class="cat-summary" id="catSummary" style="display:none">
-    <h3>📊 ¿En qué se va tu plata?</h3>
-    <div id="catRows"></div>
+    <button class="sec-toggle" data-collapse="catSummary">
+      <h3>📊 ¿En qué se va tu plata?</h3>
+      <span class="sec-chevron">▲</span>
+    </button>
+    <div class="sec-body">
+      <div id="catRows"></div>
+    </div>
   </section>
 
   </div><!-- /viewGastos -->
@@ -2131,6 +2177,15 @@
 
   // ---------- Navegación de bienvenida ----------
   document.getElementById('btnTry').addEventListener('click', startDemo);
+
+  // ---------- Plegar / desplegar secciones (Nuevo gasto, tabla, resumen) ----------
+  document.addEventListener('click', (e)=>{
+    const toggle = e.target.closest('.sec-toggle');
+    if(!toggle) return;
+    const id = toggle.getAttribute('data-collapse');
+    const sec = id ? document.getElementById(id) : toggle.closest('section, div');
+    if(sec) sec.classList.toggle('is-collapsed');
+  });
   document.getElementById('btnHave').addEventListener('click', ()=> showOnly(gateLogin));
   document.getElementById('btnBackFromLogin').addEventListener('click', ()=> showOnly(gateWelcome));
   document.getElementById('btnDemoPriceBuy').addEventListener('click', ()=> showActivate('demo'));
