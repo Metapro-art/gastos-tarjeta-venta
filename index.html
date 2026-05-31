@@ -1718,6 +1718,10 @@
         <label for="recurCat">Categoría</label>
         <select id="recurCat"></select>
       </div>
+      <div class="rf-field" id="recurSubField" style="display:none">
+        <label for="recurSubcat">Subcategoría <span style="color:var(--text-faint);font-weight:400">(opcional)</span></label>
+        <select id="recurSubcat"></select>
+      </div>
       <div class="rf-field">
         <label for="recurPago">Se paga con</label>
         <select id="recurPago">
@@ -2088,7 +2092,7 @@
         <div class="recur-item">
           <div class="ri-info">
             <div class="ri-desc">${escapeHtml(r.desc)} <span class="ri-amt">${fmtCOP.format(r.cop)}</span></div>
-            <div class="ri-meta">${escapeHtml(catLabel(c))} · ${pagoTxt}</div>
+            <div class="ri-meta">${escapeHtml(catLabel(c))}${r.subcat ? ' › '+escapeHtml(r.subcat) : ''} · ${pagoTxt}</div>
           </div>
           <div class="ri-actions">
             <button class="ri-add" data-recadd="${r.id}">Agregar</button>
@@ -2107,7 +2111,7 @@
     const t = trm.value || 0;
     const fecha = todayISO();
     const datos = {
-      desc: r.desc, cat: r.cat, subcat: "",
+      desc: r.desc, cat: r.cat, subcat: r.subcat || "",
       usd: (t ? r.cop / t : 0), cop: r.cop, t: t,
       pago: r.pago, markup: 0, fecha,
       vinculaTarjeta: (r.pago === 'credito' && r.cat !== 'abono'),
@@ -2132,6 +2136,22 @@
   (function(){
     const modal = document.getElementById('recurModal');
     if(!modal) return;
+    // Llena el selector de subcategorías según la categoría elegida en el modal
+    function fillRecurSubcat(selected){
+      const cat = catById(document.getElementById('recurCat').value);
+      const subs = (cat && Array.isArray(cat.subs)) ? cat.subs : [];
+      const field = document.getElementById('recurSubField');
+      const sub = document.getElementById('recurSubcat');
+      if(subs.length === 0){
+        field.style.display = "none";
+        sub.innerHTML = '<option value="">—</option>';
+        return;
+      }
+      field.style.display = "";
+      sub.innerHTML = '<option value="">(Sin subcategoría)</option>' +
+        subs.map(s => '<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>').join('');
+      if(selected) sub.value = selected;
+    }
     const open = ()=>{
       // llenar el selector de categorías del modal
       const sel = document.getElementById('recurCat');
@@ -2139,9 +2159,12 @@
       document.getElementById('recurDesc').value = "";
       document.getElementById('recurCop').value = "";
       document.getElementById('recurPago').value = "debito";
+      fillRecurSubcat(); // resetea/oculta subcategoría según la primera categoría
       modal.classList.add('show');
       setTimeout(()=> document.getElementById('recurDesc').focus(), 50);
     };
+    // Al cambiar la categoría, actualizar las subcategorías disponibles
+    document.getElementById('recurCat').addEventListener('change', ()=> fillRecurSubcat());
     const close = ()=> modal.classList.remove('show');
     const btnAdd = document.getElementById('btnAddRecur');
     if(btnAdd) btnAdd.addEventListener('click', open);
@@ -2151,10 +2174,12 @@
       const desc = document.getElementById('recurDesc').value.trim();
       const cop = parseFloat(document.getElementById('recurCop').value);
       const cat = document.getElementById('recurCat').value;
+      const subEl = document.getElementById('recurSubcat');
+      const subcat = (document.getElementById('recurSubField').style.display !== 'none') ? subEl.value : "";
       const pago = document.getElementById('recurPago').value;
       if(!desc){ document.getElementById('recurDesc').focus(); return; }
       if(isNaN(cop) || cop <= 0){ document.getElementById('recurCop').focus(); return; }
-      recurrentes.push({ id: "rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6), desc, cop, cat, pago });
+      recurrentes.push({ id: "rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6), desc, cop, cat, subcat, pago });
       persistRecur(); renderRecurrentes();
       close();
       showToast("✅ Gasto fijo “" + desc + "” creado");
