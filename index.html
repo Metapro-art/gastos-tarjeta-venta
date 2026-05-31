@@ -513,7 +513,23 @@
     border:1px solid rgba(224,179,87,.25); border-radius:18px;
     padding:22px; margin-bottom:28px;
   }
-  .admin h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin-bottom:6px; color:var(--gold); }
+  .admin-toggle{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    width:100%; background:none; border:none; cursor:pointer; padding:0; text-align:left;
+  }
+  .admin h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin:0; color:var(--gold); }
+  .admin-chevron{
+    flex:0 0 auto; color:var(--gold); font-size:14px; transition:transform .25s ease;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(224,179,87,.3); border-radius:9px;
+  }
+  .admin.collapsed .admin-chevron{ transform:rotate(180deg); }
+  .admin-body{
+    max-height:1200px; overflow:hidden;
+    transition:max-height .3s ease, opacity .25s ease, margin-top .25s ease;
+    opacity:1; margin-top:14px;
+  }
+  .admin.collapsed .admin-body{ max-height:0; opacity:0; margin-top:0; }
   .admin .desc{ font-size:13px; color:var(--text-dim); margin-bottom:16px; }
   .admin-add{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
   .admin-add input{
@@ -1207,15 +1223,20 @@
   </div>
 
   <section class="admin" id="adminPanel" style="display:none">
-    <h2>Panel de administración</h2>
-    <div class="desc">Autoriza clientes pegando su correo de Google. Quita el acceso cuando dejen de pagar.</div>
-    <div class="admin-add">
-      <input type="email" id="adminEmail" placeholder="correo-del-cliente@gmail.com" autocomplete="off" />
-      <button id="btnAuthAdd">Autorizar</button>
-    </div>
-    <div class="auth-list" id="authList"></div>
-    <div class="ver-mas-wrap" id="verTodosWrap" style="display:none; padding-top:12px">
-      <button class="btn-vermas" id="btnVerTodos">Ver todos los clientes</button>
+    <button class="admin-toggle" id="adminToggle" aria-expanded="true">
+      <h2>Panel de administración</h2>
+      <span class="admin-chevron" id="adminChevron">▲</span>
+    </button>
+    <div class="admin-body" id="adminBody">
+      <div class="desc">Autoriza clientes pegando su correo de Google. Quita el acceso cuando dejen de pagar.</div>
+      <div class="admin-add">
+        <input type="email" id="adminEmail" placeholder="correo-del-cliente@gmail.com" autocomplete="off" />
+        <button id="btnAuthAdd">Autorizar</button>
+      </div>
+      <div class="auth-list" id="authList"></div>
+      <div class="ver-mas-wrap" id="verTodosWrap" style="display:none; padding-top:12px">
+        <button class="btn-vermas" id="btnVerTodos">Ver todos los clientes</button>
+      </div>
     </div>
   </section>
 
@@ -2342,6 +2363,16 @@
     });
     document.getElementById('btnAuthAdd').addEventListener('click', addAuthorized);
     document.getElementById('adminEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') addAuthorized(); });
+
+    // Plegar / desplegar el panel de administración con la flechita
+    const adminToggle = document.getElementById('adminToggle');
+    if(adminToggle){
+      adminToggle.addEventListener('click', ()=>{
+        const panel = document.getElementById('adminPanel');
+        const colapsado = panel.classList.toggle('collapsed');
+        adminToggle.setAttribute('aria-expanded', colapsado ? 'false' : 'true');
+      });
+    }
 
     // Modal "Ver todos"
     const cm = document.getElementById('clientsModal');
