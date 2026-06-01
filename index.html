@@ -1012,6 +1012,15 @@
     display:inline-flex; align-items:center; gap:7px;
   }
   .btn-install:hover{ border-color:var(--gold-soft); color:var(--gold); }
+  /* Botón de instalación nativa en el modal */
+  .btn-install-now{
+    width:100%; background:linear-gradient(180deg, var(--gold), var(--gold-soft)); color:#1a1404;
+    border:none; border-radius:12px; padding:15px; font-family:'Hanken Grotesk',sans-serif;
+    font-size:16px; font-weight:700; cursor:pointer; transition:transform .12s, filter .18s, box-shadow .18s;
+    box-shadow:0 0 22px -8px rgba(224,179,87,.45); margin:4px 0 14px;
+  }
+  .btn-install-now:hover{ filter:brightness(1.07); transform:translateY(-1px); box-shadow:0 0 28px -6px rgba(224,179,87,.6); }
+  .install-or{ text-align:center; font-size:12.5px; color:var(--text-faint); margin-bottom:14px; }
 
   /* ---------- Toast (aviso flotante) ---------- */
   .toast{
@@ -1803,6 +1812,8 @@
   <div class="modal">
     <h3>📲 Instala la app</h3>
     <div class="msub">Agrega la app a tu pantalla de inicio y ábrela con un toque, como cualquier aplicación, sin entrar al navegador.</div>
+    <button class="btn-install-now" id="btnInstallNow" style="display:none">📲 Instalar ahora</button>
+    <div class="install-or" id="installOr" style="display:none">o hazlo manualmente:</div>
     <div class="tabs">
       <button id="tabIos" class="active">iPhone</button>
       <button id="tabAndroid">Android</button>
@@ -1850,10 +1861,38 @@
     }catch(e){ /* si falla, la app sigue funcionando igual */ }
   })();
 
+  // ====== PWA: captura del prompt de instalación nativo (Chrome/Android) ======
+  // Chrome dispara 'beforeinstallprompt' cuando la app se puede instalar. Lo guardamos
+  // para mostrar un botón "Instalar ahora" que dispara el diálogo nativo del navegador.
+  let deferredInstallPrompt = null;
+  function actualizarBotonInstalar(){
+    const btn = document.getElementById('btnInstallNow');
+    const orTxt = document.getElementById('installOr');
+    if(!btn) return;
+    if(deferredInstallPrompt){
+      btn.style.display = "";
+      if(orTxt) orTxt.style.display = "";
+    } else {
+      btn.style.display = "none";
+      if(orTxt) orTxt.style.display = "none";
+    }
+  }
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault();            // evita el mini-banner automático
+    deferredInstallPrompt = e;     // lo guardamos para usarlo con el botón
+    actualizarBotonInstalar();
+  });
+  // Si el usuario ya instaló, ocultar el botón
+  window.addEventListener('appinstalled', ()=>{
+    deferredInstallPrompt = null;
+    actualizarBotonInstalar();
+    if(typeof showToast === 'function') showToast("✅ App instalada");
+  });
+
   // ====== Modal de instalación (tutorial iPhone / Android) ======
   (function(){
     const modal = document.getElementById('installModal');
-    const open  = ()=> modal.classList.add('show');
+    const open  = ()=>{ actualizarBotonInstalar(); modal.classList.add('show'); };
     const close = ()=> modal.classList.remove('show');
     const tabIos = document.getElementById('tabIos');
     const tabAnd = document.getElementById('tabAndroid');
@@ -1870,6 +1909,17 @@
     tabAnd.addEventListener('click', showAnd);
     document.getElementById('closeInstall').addEventListener('click', close);
     modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
+
+    // Botón grande "Instalar ahora": dispara el diálogo nativo de Chrome
+    const btnNow = document.getElementById('btnInstallNow');
+    if(btnNow) btnNow.addEventListener('click', async ()=>{
+      if(!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();                 // muestra el diálogo nativo del navegador
+      try{ await deferredInstallPrompt.userChoice; }catch(e){}
+      deferredInstallPrompt = null;                   // solo se puede usar una vez
+      actualizarBotonInstalar();
+      close();
+    });
 
     // Botones que abren el tutorial
     ['btnInstall','btnDemoInstall'].forEach(id=>{
