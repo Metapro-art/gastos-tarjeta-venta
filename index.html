@@ -1184,6 +1184,8 @@
     border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; transition:all .16s;
   }
   .pay-item button:hover{ border-color:var(--rose); color:var(--rose); }
+  .pay-item .pi-actions{ display:flex; gap:7px; flex:0 0 auto; }
+  .pay-item .pi-edit:hover{ border-color:var(--gold); color:var(--gold); }
   .pay-empty{ font-size:13px; color:var(--text-faint); padding:8px 2px; }
   @media (max-width:480px){
     .pay-form .field{ flex:1 1 100%; }
@@ -1538,6 +1540,10 @@
     <section class="pay-panel">
       <h3>💚 Registrar un pago / abono</h3>
       <div class="pdesc">Cuando pagues tu tarjeta (total o parcial), regístralo aquí para ver cuánto te queda pendiente.</div>
+      <div class="edit-banner" id="ccPagoEditBanner" style="display:none">
+        ✎ Estás editando un pago.
+        <button id="ccPagoCancel">Cancelar edición</button>
+      </div>
       <div class="pay-form">
         <div class="field">
           <label for="ccPagoDesc">Descripción <span style="color:var(--text-faint);font-weight:400">(opcional)</span></label>
@@ -3596,12 +3602,62 @@
   ccPagoFecha.value = todayISO();
 
   const ccPagoDesc = document.getElementById('ccPagoDesc');
+  const ccPagoAddBtn = document.getElementById('ccPagoAdd');
+  const ccPagoEditBanner = document.getElementById('ccPagoEditBanner');
+  let ccPagoEditingId = null; // null = registrando uno nuevo; con id = editando ese pago
+
+  function ccStartEditPago(id){
+    const p = ccPagos.find(x => x.id === id);
+    if(!p) return;
+    ccPagoEditingId = id;
+    ccPagoDesc.value = (p.desc && p.desc !== "Abono tarjeta de crédito") ? p.desc : "";
+    ccPagoMonto.value = Math.round(p.monto);
+    ccPagoFecha.value = /^\d{4}-\d{2}-\d{2}$/.test(p.fecha) ? p.fecha : todayISO();
+    ccPagoAddBtn.textContent = 'Guardar cambios';
+    ccPagoEditBanner.style.display = '';
+    viewTarjeta.querySelector('.pay-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+    ccPagoMonto.focus();
+  }
+  function ccPagoFinishEdit(){
+    ccPagoEditingId = null;
+    ccPagoAddBtn.textContent = 'Registrar pago';
+    ccPagoEditBanner.style.display = 'none';
+  }
+  function ccPagoCancelEdit(){
+    ccPagoFinishEdit();
+    ccPagoMonto.value = ""; ccPagoDesc.value = "";
+    ccPagoFecha.value = todayISO();
+  }
+  document.getElementById('ccPagoCancel').addEventListener('click', ccPagoCancelEdit);
+
   function ccAddPago(){
     const monto = parseFloat(ccPagoMonto.value);
     if(isNaN(monto) || monto <= 0){ ccPagoMonto.focus(); return; }
     const fecha = ccPagoFecha.value || todayISO();
     const t = trm.value || 0;
     const desc = (ccPagoDesc.value.trim()) || "Abono tarjeta de crédito";
+    // ----- Modo edición: actualiza el pago y su abono vinculado -----
+    if(ccPagoEditingId){
+      const p = ccPagos.find(x => x.id === ccPagoEditingId);
+      let tocoGastos = false;
+      if(p){
+        p.monto = monto; p.fecha = fecha; p.desc = desc;
+        // El mismo pago vive también como abono en "Gastos del mes": hay que actualizarlo allá
+        const g = p.linkId ? rows.find(x => x.linkId === p.linkId) : null;
+        if(g){
+          const tg = g.trm || t;   // se conserva la TRM original del abono
+          g.desc = desc; g.cop = monto; g.fecha = fecha;
+          g.trm = tg; g.usd = tg ? monto/tg : 0;
+          tocoGastos = true;
+        }
+        persistCC(); persist();
+      }
+      ccPagoCancelEdit();
+      renderCC(); render();
+      showToast("✎ Pago actualizado" + (tocoGastos ? " · también en “Gastos del mes”" : ""));
+      return;
+    }
+    // ----- Modo crear -----
     const linkId = "lnk_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
     ccPagos.push({
       id: "pay_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
@@ -3628,6 +3684,7 @@
       rows = rows.filter(x => x.linkId !== p.linkId);
       persist(); render();
     }
+    if(id === ccPagoEditingId) ccPagoCancelEdit();
     ccPagos = ccPagos.filter(x => x.id !== id);
     persistCC(); renderCC();
   }
@@ -3857,9 +3914,14 @@
             <span class="pi-amt">− ${fmtCOP.format(p.monto)}</span>
             <span class="pi-date">${fmtFecha(p.fecha)}</span>
           </div>
-          <button title="Eliminar pago" data-pid="${p.id}">✕</button>
+          <div class="pi-actions">
+            <button class="pi-edit" title="Editar pago" data-peid="${p.id}">✎</button>
+            <button title="Eliminar pago" data-pid="${p.id}">✕</button>
+          </div>
         </div>`;
       }).join("");
+      payList.querySelectorAll('button[data-peid]').forEach(b=>
+        b.addEventListener('click', ()=> ccStartEditPago(b.dataset.peid)));
       payList.querySelectorAll('button[data-pid]').forEach(b=>
         b.addEventListener('click', ()=> ccDelPago(b.dataset.pid)));
     }
