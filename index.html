@@ -214,6 +214,11 @@
     white-space:nowrap; transition:filter .15s;
   }
   .recur-item .ri-add:hover{ filter:brightness(1.08); }
+  .recur-item .ri-edit{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:14px; transition:all .15s; flex:0 0 auto;
+  }
+  .recur-item .ri-edit:hover{ border-color:var(--gold); color:var(--gold); }
   .recur-item .ri-del{
     background:none; border:1px solid var(--line); color:var(--text-faint);
     border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:14px; transition:all .15s; flex:0 0 auto;
@@ -1714,8 +1719,8 @@
 <!-- ===== Modal: crear gasto fijo (recurrente) ===== -->
 <div class="modal-overlay" id="recurModal">
   <div class="modal">
-    <h3>🔁 Nuevo gasto fijo</h3>
-    <div class="msub">Crea una plantilla para un pago que se repite cada mes. Luego lo agregas a tus gastos con un toque.</div>
+    <h3 id="recurModalTitle">🔁 Nuevo gasto fijo</h3>
+    <div class="msub" id="recurModalSub">Crea una plantilla para un pago que se repite cada mes. Luego lo agregas a tus gastos con un toque.</div>
     <div class="recur-form">
       <div class="rf-field">
         <label for="recurDesc">¿Qué pago es?</label>
@@ -2148,12 +2153,20 @@
           </div>
           <div class="ri-actions">
             <button class="ri-add" data-recadd="${r.id}">Agregar</button>
+            <button class="ri-edit" data-recedit="${r.id}" title="Editar gasto fijo">✏️</button>
             <button class="ri-del" data-recdel="${r.id}" title="Eliminar gasto fijo">🗑️</button>
           </div>
         </div>`;
     }).join("");
     cont.querySelectorAll('[data-recadd]').forEach(b=> b.addEventListener('click', ()=> agregarRecurrente(b.dataset.recadd)));
+    cont.querySelectorAll('[data-recedit]').forEach(b=> b.addEventListener('click', ()=> editarRecurrente(b.dataset.recedit)));
     cont.querySelectorAll('[data-recdel]').forEach(b=> b.addEventListener('click', ()=> borrarRecurrente(b.dataset.recdel)));
+  }
+
+  // Abre el modal en modo edición (la función real la define el IIFE del modal, más abajo)
+  let _openRecurModal = null;
+  function editarRecurrente(id){
+    if(typeof _openRecurModal === 'function') _openRecurModal(id);
   }
 
   // Inserta una plantilla como gasto real (con la fecha de hoy)
@@ -2204,22 +2217,34 @@
         subs.map(s => '<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>').join('');
       if(selected) sub.value = selected;
     }
-    const open = ()=>{
+    let editId = null; // null = creando uno nuevo; con id = editando ese gasto fijo
+    // Abre el modal. Sin id => crear. Con id => editar ese gasto fijo.
+    const open = (id)=>{
+      editId = (typeof id === 'string' && id) ? id : null;
+      const r = editId ? recurrentes.find(x=> x.id === editId) : null;
+      if(!r) editId = null; // si no existe la plantilla, cae a modo crear
       // llenar el selector de categorías del modal
       const sel = document.getElementById('recurCat');
       sel.innerHTML = CATEGORIAS.filter(c=> c.id!=='tarjeta' && c.id!=='abono').map(c=> '<option value="'+c.id+'">'+escapeHtml(catLabel(c))+'</option>').join('');
-      document.getElementById('recurDesc').value = "";
-      document.getElementById('recurCop').value = "";
-      document.getElementById('recurPago').value = "debito";
-      fillRecurSubcat(); // resetea/oculta subcategoría según la primera categoría
+      document.getElementById('recurModalTitle').textContent = r ? "✏️ Editar gasto fijo" : "🔁 Nuevo gasto fijo";
+      document.getElementById('recurModalSub').textContent = r
+        ? "Cambia lo que necesites. Esto solo actualiza la plantilla; los gastos que ya agregaste no se modifican."
+        : "Crea una plantilla para un pago que se repite cada mes. Luego lo agregas a tus gastos con un toque.";
+      document.getElementById('recurSave').textContent = r ? "Guardar cambios" : "Guardar gasto fijo";
+      document.getElementById('recurDesc').value = r ? r.desc : "";
+      document.getElementById('recurCop').value = r ? r.cop : "";
+      if(r && Array.from(sel.options).some(o=> o.value === r.cat)) sel.value = r.cat;
+      document.getElementById('recurPago').value = r ? r.pago : "debito";
+      fillRecurSubcat(r ? (r.subcat || "") : ""); // resetea/oculta subcategoría según la categoría
       modal.classList.add('show');
       setTimeout(()=> document.getElementById('recurDesc').focus(), 50);
     };
+    _openRecurModal = open; // lo usa editarRecurrente()
     // Al cambiar la categoría, actualizar las subcategorías disponibles
     document.getElementById('recurCat').addEventListener('change', ()=> fillRecurSubcat());
-    const close = ()=> modal.classList.remove('show');
+    const close = ()=>{ modal.classList.remove('show'); editId = null; };
     const btnAdd = document.getElementById('btnAddRecur');
-    if(btnAdd) btnAdd.addEventListener('click', open);
+    if(btnAdd) btnAdd.addEventListener('click', ()=> open(null));
     document.getElementById('closeRecur').addEventListener('click', close);
     modal.addEventListener('click', (e)=>{ if(e.target === modal) close(); });
     document.getElementById('recurSave').addEventListener('click', ()=>{
@@ -2231,10 +2256,19 @@
       const pago = document.getElementById('recurPago').value;
       if(!desc){ document.getElementById('recurDesc').focus(); return; }
       if(isNaN(cop) || cop <= 0){ document.getElementById('recurCop').focus(); return; }
-      recurrentes.push({ id: "rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6), desc, cop, cat, subcat, pago });
-      persistRecur(); renderRecurrentes();
-      close();
-      showToast("✅ Gasto fijo “" + desc + "” creado");
+      const editando = editId ? recurrentes.find(x=> x.id === editId) : null;
+      if(editando){
+        // Editar: se conserva el mismo id, solo cambian los datos de la plantilla
+        editando.desc = desc; editando.cop = cop; editando.cat = cat; editando.subcat = subcat; editando.pago = pago;
+        persistRecur(); renderRecurrentes();
+        close();
+        showToast("✏️ Gasto fijo “" + desc + "” actualizado");
+      } else {
+        recurrentes.push({ id: "rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6), desc, cop, cat, subcat, pago });
+        persistRecur(); renderRecurrentes();
+        close();
+        showToast("✅ Gasto fijo “" + desc + "” creado");
+      }
     });
   })();
   (function(){
