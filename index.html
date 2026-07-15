@@ -134,6 +134,8 @@
   .stat .v.green{ color:var(--emerald); }
   .stat .v.red{ color:var(--rose); }
   .stat .sub{ font-size:13px; color:var(--text-faint); margin-top:6px; }
+  .stat .alt-cur{ font-family:'JetBrains Mono', monospace; font-size:13.5px; color:var(--text-dim); margin-top:4px; letter-spacing:-.01em; }
+  .stat .alt-cur:empty{ display:none; }
   .stat .stat-tarjeta{ color:var(--gold); font-size:12px; margin-top:3px; opacity:.92; }
   .stat .v.amber{ color:var(--gold); }
 
@@ -159,6 +161,7 @@
   .bfield select{ font-family:'Hanken Grotesk',sans-serif; cursor:pointer; }
   .bfield input:focus, .bfield select:focus{ outline:none; border-color:var(--gold-soft); box-shadow:0 0 0 3px rgba(224,179,87,.14); }
   .bfield.bcur{ min-width:150px; }
+  .bfield .alt-cur{ font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--text-dim); margin-top:-2px; min-height:16px; }
   @media (max-width:620px){ .budget-setup{ grid-template-columns:1fr 1fr; } .bfield.bcur{ grid-column:1 / -1; } }
 
   /* ---------- Select de categoría en el form ---------- */
@@ -1342,10 +1345,12 @@
     <div class="bfield">
       <label for="fIngreso">💰 Ingreso del mes</label>
       <input type="number" id="fIngreso" class="num" placeholder="ej: 3.000.000" step="1" min="0" />
+      <div class="alt-cur" id="fIngresoAlt"></div>
     </div>
     <div class="bfield">
       <label for="fObjetivo">🎯 Objetivo de gasto</label>
       <input type="number" id="fObjetivo" class="num" placeholder="ej: 2.000.000" step="1" min="0" />
+      <div class="alt-cur" id="fObjetivoAlt"></div>
     </div>
     <div class="bfield bcur">
       <label for="fMoneda">Moneda</label>
@@ -1360,18 +1365,21 @@
     <div class="stat">
       <div class="k">Gastado este mes</div>
       <div class="v cop" id="stGastado">$0</div>
+      <div class="alt-cur" id="stGastadoAlt"></div>
       <div class="sub" id="countSub">0 gastos registrados</div>
       <div class="sub stat-tarjeta" id="gastadoTarjetaSub" style="display:none"></div>
     </div>
     <div class="stat alt" id="stObjetivoCard">
       <div class="k">Objetivo de gasto</div>
       <div class="v green" id="stObjetivo">—</div>
+      <div class="alt-cur" id="stObjetivoAlt"></div>
       <div class="progress"><div class="progress-bar" id="objBar"></div></div>
       <div class="sub" id="objSub">define tu objetivo arriba</div>
     </div>
     <div class="stat" id="stAhorroCard">
       <div class="k">Puedes ahorrar</div>
       <div class="v" id="stAhorro">—</div>
+      <div class="alt-cur" id="stAhorroAlt"></div>
       <div class="sub" id="ahorroSub">ingreso − gastos del mes</div>
     </div>
   </section>
@@ -1518,21 +1526,25 @@
       <div class="stat">
         <div class="k">Deuda total (COP)</div>
         <div class="v cop" id="ccDeudaCop">$0</div>
+        <div class="alt-cur" id="ccDeudaAlt"></div>
         <div class="sub" id="ccCount">0 compras registradas</div>
       </div>
       <div class="stat" id="ccPagadoCard">
         <div class="k">Has pagado</div>
         <div class="v green" id="ccPagado">$0</div>
+        <div class="alt-cur" id="ccPagadoAlt"></div>
         <div class="sub" id="ccPagadoSub">abonos registrados</div>
       </div>
       <div class="stat alt" id="ccSaldoCard">
         <div class="k">Saldo pendiente</div>
         <div class="v amber" id="ccSaldo">$0</div>
+        <div class="alt-cur" id="ccSaldoAlt"></div>
         <div class="sub">lo que te falta por pagar</div>
       </div>
       <div class="stat">
         <div class="k">Cuota mensual total</div>
         <div class="v green" id="ccCuota">$0</div>
+        <div class="alt-cur" id="ccCuotaAlt"></div>
         <div class="sub">suma de las cuotas del mes</div>
       </div>
     </section>
@@ -2756,6 +2768,18 @@
   // ---------- Formateadores ----------
   const fmtCOP = new Intl.NumberFormat('es-CO', { style:'currency', currency:'COP', maximumFractionDigits:0 });
   const fmtUSD = new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2 });
+
+  // Pinta la línea de la otra moneda debajo de una cifra, siempre con la TRM del día.
+  // `moneda` es la moneda en la que está `valor`. Si no hay TRM o no hay valor, la línea se oculta.
+  function setAltCur(elId, valor, moneda){
+    const el = document.getElementById(elId);
+    if(!el) return;
+    const t = trm.value || 0;
+    if(!t || valor == null || isNaN(valor)){ el.textContent = ""; return; }
+    el.textContent = (moneda === "USD")
+      ? "≈ " + fmtCOP.format(valor * t)
+      : "≈ " + fmtUSD.format(valor / t);
+  }
   const fmtNum = new Intl.NumberFormat('es-CO', { maximumFractionDigits:2 });
 
   // ---------- TRM ----------
@@ -2796,6 +2820,7 @@
       save(KEY_TRM, trm);
       renderTrm();
       recalc(lastEdited); ccUpdateRate(); if(ccLast==="usd") ccRecalc("usd");
+      render(); renderCC();   // las líneas de la otra moneda usan la TRM del día
     }catch(err){
       // Falla la API → dejamos el valor guardado o pedimos manual
       if(trm.value){ renderTrm(); }
@@ -2819,6 +2844,7 @@
       save(KEY_TRM, trm);
       renderTrm();
       recalc(lastEdited); ccUpdateRate(); if(ccLast==="usd") ccRecalc("usd");
+      render(); renderCC();   // las líneas de la otra moneda usan la TRM del día
     }
   });
 
@@ -2956,7 +2982,22 @@
     persistBudget(); render();
   });
   fMoneda.addEventListener('change', ()=>{
-    budget.moneda = fMoneda.value;
+    const antes = budget.moneda || "COP";
+    const ahora = fMoneda.value;
+    const t = trm.value || 0;
+    // El ingreso y el objetivo estaban escritos en la moneda anterior: hay que CONVERTIRLOS,
+    // no reinterpretarlos (si no, 1300 dólares se volverían 1300 pesos).
+    if(t && antes !== ahora){
+      const conv = (v)=>{
+        if(v == null) return null;
+        const x = (ahora === "USD") ? v / t : v * t;
+        return (ahora === "USD") ? Math.round(x*100)/100 : Math.round(x);
+      };
+      budget.ingreso  = conv(budget.ingreso);
+      budget.objetivo = conv(budget.objetivo);
+    }
+    budget.moneda = ahora;
+    fillBudgetInputs();
     persistBudget(); render();
   });
 
@@ -3468,6 +3509,9 @@
     // Desglose: cuánto de ese total se gastó con la tarjeta de crédito (gastos a crédito).
     const gastadoTarjeta = rows.filter(r => r.pago === 'credito').reduce((s,r)=> s + amt(r), 0);
     document.getElementById('stGastado').textContent = fmtMon(gastado);
+    setAltCur('stGastadoAlt', gastado, moneda);
+    setAltCur('fIngresoAlt',  budget.ingreso,  moneda);
+    setAltCur('fObjetivoAlt', budget.objetivo, moneda);
     document.getElementById('countSub').textContent =
       rows.length + (rows.length === 1 ? " gasto registrado" : " gastos registrados");
     // Desglose pequeñito: cuánto del total viene de la tarjeta de crédito
@@ -3487,6 +3531,7 @@
       const restante = budget.objetivo - gastado;
       const pct = Math.max(0, Math.min(100, (gastado / budget.objetivo) * 100));
       objEl.textContent = fmtMon(Math.abs(restante)) ;
+      setAltCur('stObjetivoAlt', Math.abs(restante), moneda);
       if(restante >= 0){
         objEl.className = "v green";
         objSub.textContent = `te quedan de tu objetivo de ${fmtMon(budget.objetivo)} (${pct.toFixed(0)}% usado)`;
@@ -3498,6 +3543,7 @@
       objBar.className = "progress-bar" + (pct >= 100 ? " over" : pct >= 80 ? " warn" : "");
     } else {
       objEl.textContent = "—"; objEl.className = "v green";
+      setAltCur('stObjetivoAlt', null, moneda);
       objSub.textContent = "define tu objetivo arriba";
       objBar.style.width = "0%"; objBar.className = "progress-bar";
     }
@@ -3508,6 +3554,7 @@
     if(budget.ingreso){
       const ahorro = budget.ingreso - gastado;
       ahoEl.textContent = fmtMon(ahorro);
+      setAltCur('stAhorroAlt', ahorro, moneda);
       ahoEl.className = "v " + (ahorro < 0 ? "red" : "green");
       const pctG = Math.min(100, (gastado / budget.ingreso) * 100);
       ahoSub.textContent = ahorro >= 0
@@ -3515,6 +3562,7 @@
         : `gastaste más de lo que ingresaste`;
     } else {
       ahoEl.textContent = "—"; ahoEl.className = "v amber";
+      setAltCur('stAhorroAlt', null, moneda);
       ahoSub.textContent = "ingresa tu sueldo arriba para verlo";
     }
 
@@ -3885,11 +3933,14 @@
     const saldo = totCop - totPagado;
     document.getElementById('ccDeudaCop').textContent = fmtCOP.format(totCop);
     document.getElementById('ccCuota').textContent    = fmtCOP.format(totCuota);
+    setAltCur('ccDeudaAlt', totCop,   "COP");
+    setAltCur('ccCuotaAlt', totCuota, "COP");
     document.getElementById('ccCount').textContent    =
       ccRows.length + (ccRows.length === 1 ? " compra registrada" : " compras registradas");
 
     // Pagado
     document.getElementById('ccPagado').textContent = fmtCOP.format(totPagado);
+    setAltCur('ccPagadoAlt', totPagado, "COP");
     document.getElementById('ccPagadoSub').textContent =
       ccPagos.length === 0 ? "aún no has registrado pagos"
       : ccPagos.length + (ccPagos.length === 1 ? " pago registrado" : " pagos registrados");
@@ -3897,6 +3948,7 @@
     // Saldo pendiente
     const ccSaldoEl = document.getElementById('ccSaldo');
     ccSaldoEl.textContent = fmtCOP.format(saldo);
+    setAltCur('ccSaldoAlt', saldo, "COP");
     ccSaldoEl.className = "v " + (saldo <= 0 ? "green" : "amber");
 
     // Lista de pagos
